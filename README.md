@@ -1,1 +1,1 @@
-# CompSci_Project_1: Machine Learning
+# CompSci Project 1: Machine Learning
