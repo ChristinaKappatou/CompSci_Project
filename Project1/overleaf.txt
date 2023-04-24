@@ -1,0 +1,182 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage[colorlinks, citecolor=black, urlcolor=Black]{hyperref}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{epstopdf, epsfig}
+\usepackage{xcolor}
+\geometry{margin=2.5cm, top= 2cm}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage[font={footnotesize,bf}]{caption}
+\hypersetup{colorlinks,linkcolor={black},citecolor={black},urlcolor={PineGreen}}  
+\title{Testing 24 machine learning techniques for the modelling of meridional heat transport in the Northern Hemisphere.}
+\author{Christina Kappatou, Department of Geosciences, UiO, christina.kappatou@geo.uio.no}
+\date{April 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Abstract}
+
+Inspired by the work of \cite{Stone_1978}, I performed a polynomial fit analysis on the non-dimensional meridional heat transport equation, using a series of machine learning techniques. After applying plain Ordinary Least Squares (OLS) and Ridge regression, as well as their bootstrap and cross-validation resampling variations, I concluded that the polynomial degree should be at least 6, in order to achieve a satisfactory bias-variance trade-off. Moving into choosing the optimal polynomial coefficients, I used plain Gradient Descent (GD) and Stochastic Gradient Descent (SGD), both with and without momentum, on OLS and Ridge regression. The learning rate was tuned by varying its constant values and exponentially but I also tested the effects of Adaptive Gradient Algorithm (AdaGrad), Root Mean Square propagation (RMS-prop) and ADAptive Moment estimation (ADAM) tuning techniques. Using the simplest variation, GD for OLS with a constant value of the learning rate, resulted in a polynomial exceptionally close to the one acquired from the theoretical solution, that is the inversion of the Hessian matrix, for a version of Stone's equation that includes random noise. 
+
+\section{Introduction}
+
+“How is the total meridional heat transport dependent on the particular dynamics and structure of the atmosphere-ocean system?”
+
+This is one of the questions Stone addressed in his 1978 paper (\cite{Stone_1978}), following the experiments carried out at the Geophysical Fluid Dynamics Laboratory (GFDL) as well as one-dimensional heat balance climate models, both of which suggesting that, in fact, the meridional heat transport is insensitive to the latitudinal structure of the Earth. To confirm these results, Stone used the one-dimensional heat balance equation, which, assuming a state of equilibrium and planetary scales, is exact:
+
+\begin{equation}\label{1}
+    \frac{dF}{d\phi} = 2\pi\cdot{R^2}\cdot{cos\phi}\cdot{[Q\cdot{(1-\alpha)}-I]}, 
+\end{equation}
+
+where F is the total flux across a latitude belt,  R= $6.37 \cdot{10^6}$ is the radius of the Earth, Q is the mean \textit{incident} solar radiation per unit area at latitude $\phi$, $\alpha$ is the mean albedo at latitude $\phi$ and I is the mean \textit{emitted} thermal radiation per unit area at latitude $\phi$.
+
+He then proceeded into calculating F, using two models: one without and one with the axial tilt of the Earth, while setting $\alpha$ and I as constants, independent of $\phi$. His results can be seen in Fig. \ref{fig:Stone's plot}.
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.65\textwidth]{Screenshot from 2023-04-24 13-50-08.png}
+        \textbf{\caption{\centering{Stone's curve for total energy flux across a latitude circle in the Northern Hemisphere against the latitude, $\phi$. The solid line comes from his model that includes the axial tilt but assumes $\alpha$ and I to be independent of latitude. The circles indicate the values of heat flux, assuming axial tilt but this time using the latitudinal dependency of $\alpha$ and I, calculated by \cite{Oort_Haar_1976}. The crosses indicate the values of heat flux, calculated by eq. (\ref{4})}}
+    \label{fig:Stone's plot}}
+\end{figure}
+
+The curve he gets for for constant $\alpha$ and I, axial tilt considered, is remarkably close to the values of F he gets from the calculation of \cite{Oort_Haar_1976}. At the same time, the results for the Northern Hemisphere (N.H.) are very similar to the ones for the Southern Hemisphere (S.H.), in spite of the considerable differences in topography and ocean cover between the two. In this way he confirmed that the total meridional heat flux is indeed independent of the latitudinal structure of its parameters. 
+
+It would be interesting, however, to understand why this is so. For this, he rewrote eq. (\ref{1}) in non-dimensional form and then Fourier expanded its components, leading to the following expression:
+
+\begin{equation}\label{2}
+    \frac{df}{dx} = s\alpha-i, 
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item x= sin($\phi$), 
+    \item $f(x) = \frac{2F}{\pi\cdot{R^2}\cdot{S_0}}$, $S_0$ being the solar constant
+    \item $s(x) = \frac{4Q}{S_0}$
+    \item $\alpha (x) = 1-\alpha$
+    \item $i(x) = \frac{4I}{S_0}$
+\end{itemize}
+
+\newline
+After expanding the s, a and i coefficients in Legendre Polynomials, a common technique for spherical coordinates, while assuming zero heat transport at the North Pole as a boundary condition, he ended up with the following expression:
+
+\begin{equation}\label{3}
+    f= (s_0\cdot{a_0} + \frac{s_2 \cdot{a_2}}{5} + ...-i_0)(x-1)+ (s_0\cdot{a_2} + s_2\cdot{a_0} + \frac{2}{7}s_2\cdot{a_2}+...-i_2)(\frac{x^3-x}{2})+...
+\end{equation}
+
+Yet, assuming that the system is in equilibrium, that is there is not heat flux in the equator, and considering the values for the s, $\aplha$, i coefficients, tabulated by \cite{Ellis_Haar_1976}, he simplified eq.(\ref{3}) into:
+
+\begin{equation}\label{4}
+    f= \frac{1}{2}(s_0\cdot{a_2}+s_2\cdot{a_0}+ \frac{2}{7}s_2\cdot{a_2}-i_2)({x^3-x})
+\end{equation}
+
+From this equation one can gather that, although the s, $\alpha$, i coefficients affect the \textit{magnitude} of the heat flux, they do not affect its \textit{distribution} and therefore the maximum of the curve always lies around 35$^{\circ}$ , even with abrupt changes of these coefficients.
+
+The accuracy of the produced curve, compared to the heat flux values calculated by \cite{Oort_Haar_1976}, is fascinating, especially given the simplicity of Stone's reasoning. As an exercise to study optimization, it would be interesting to try approaching Stone's eq. (\ref{4}) with various machine learning methods. For this, I modelled eq. (\ref{4}) as a noisy dataset with x being the values of latitude for the N.H. (x \in [0, $\pi/2$]) and y being the value of f with added noise, that is, each value of f, $f_i$,  gets replaced by a value, randomly picked, from a normal distribution with $\mu=f_i$, $\sigma= |0.05\cdot{f_i}|$. This leads to a different dataset for each run. Yet, if the use of actual measurements is later needed, although they will be fixed, swifting from one dataset to another, in case I need to test multiple datasets, will be like running the code again and getting a slightly different f for each run. Needing an approximation immune to such swifts, I kept testing f with added random noise though all the phases of this project. 
+
+Having established my dataset, I moved to settling on the degree of the polynomial fit. To make my reasoning and conclusions understandable, I give an introduction to the training methods I used in Sec.2.1., while my final decision on the polynomial degree and the best method to find it is given in Sec.2.2.
+
+++++which training methods, OLS, Ridge, bootstrap, cv
+
+In order to settle on the best coefficients for the polynomial, I went through 24 optimization methods. In Sec. 3.1. I give a brief overview of their theoretical basis, while I give the results of my investigation, along with the best technique for this dataset in Sec. 3.2. 
+
+A brief discussion follows in Sec.4, regarding my results, along with suggestions for future work on modelling the meridional heat transport.
+
+For the interested reader, there are some results I am not elaborating on in the APPENDIX part, while all of my calculations can be found in my \href{https://github.com/ChristinaKappatou/CompSci_Project/tree/main/Project1}{GitHub page}. 
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+\section{Methods for assessing the polynomial degree}
+
+Needing to settle on the polynomial degree that fits best Stone's equation, I calculated the MSE of the assessed heat flux function, against a noisy version of Stone's, using plain OLS and Ridge regression, as well as their resampling variations with bootstrap and cross validation. A small introduction to the theoretical basis of these methods is considered necessary at this point for the understanding of my reasoning and conclusions further on. 
+
+-Background
+-Results
+
+
+
+
+\section{Methods for optimizing the polynomial coefficients}
+
+-Background
+-Results
+
+
+
+\section{Future work}
+
+The climate system at the moment is slightly off equilibrium (what's coming in doesn't come out). 
+
+eqn 1 doens't stand if we're not in equilibrium..because it comes from dT/dt, so if this is not zero, then you can't equate the 2 parts.  
+
+Stone's eqn 1 is annually averaged. But it'd be interesting to see what's the h.f. structure for a seasonally varying climate. 
+
+!Do the same analysis for actually h.f. data, like the ERA5. Also compare with NORESM simulations: how does it behave at 2xCO2, 4xCO2...
+
+Performing a polynomial fit to Stone's eq. [\ref{4}] was not necessary; we could have applied it directly to an actual dataset. Yet, we used this approach as an excuse to investigate some of the currently most popular machine learning and ptimization techniques. Therefore, the aim of this project, was not the modelling itself, but settling up a method to define the polynomial degree and its coefficients, among the plethora of the ones available right now. 
+
+Having settled on the Ridge regression for finding the polynomial degree and the plain GD in OLS regression to find the coefficients, I can now perform a polynomial fit to an actual dataset, probably ERA5, NORESM and conclude on an expression for the meridional heat transport, perhaps even in both hemispheres.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\bibliography{sources.bib}
+\bibliographystyle{apalike} %abbrv
+\end{document}
