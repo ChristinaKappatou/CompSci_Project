@@ -9,25 +9,38 @@
 \usepackage{amsmath}
 \usepackage{epstopdf, epsfig}
 \usepackage{xcolor}
-\geometry{margin=2.5cm, top= 2cm}
+\geometry{margin=2.5cm, top= 2cm, bottom= 2cm}
 \usepackage{setspace}
 \usepackage{hyperref}
 \usepackage{parskip}
 \usepackage[font={footnotesize,bf}]{caption}
-\hypersetup{colorlinks,linkcolor={black},citecolor={black},urlcolor={PineGreen}}  
-\title{Testing 24 machine learning techniques for the modelling of meridional heat transport in the Northern Hemisphere.}
-\author{Christina Kappatou, Department of Geosciences, UiO, christina.kappatou@geo.uio.no}
-\date{April 2023}
+\usepackage[toc,page]{appendix}
+\usepackage{unicode-math}
+\usepackage{derivative}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\hypersetup{colorlinks,linkcolor={black},citecolor={black},urlcolor={Blue}} 
+\usepackage{mathtools}
+\renewcommand{\theequation}{(\arabic{equation})}
+\newtagform{bold}[\textbf]{}{}
+\usetagform{bold}
+
+\title{\textbf{Testing up-to-date machine learning techniques for the modelling of meridional heat transport in the Northern Hemisphere.}}
+\author{Christina Kappatou,\\ Department of Geosciences, UiO,\\ christina.kappatou@geo.uio.no}
+\date{May 2023}
 
 \begin{document}
 
 \maketitle
 
-\section{Abstract}
+\section*{Abstract}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Inspired by the work of \cite{Stone_1978}, I performed a polynomial fit analysis on the non-dimensional meridional heat transport equation, using a series of machine learning techniques. After applying plain Ordinary Least Squares (OLS) and Ridge regression, as well as their bootstrap and cross-validation resampling variations, I concluded that the polynomial degree should be at least 6, in order to achieve a satisfactory bias-variance trade-off. Moving into choosing the optimal polynomial coefficients, I used plain Gradient Descent (GD) and Stochastic Gradient Descent (SGD), both with and without momentum, on OLS and Ridge regression. The learning rate was tuned by varying its constant values and exponentially but I also tested the effects of Adaptive Gradient Algorithm (AdaGrad), Root Mean Square propagation (RMS-prop) and ADAptive Moment estimation (ADAM) tuning techniques. Using the simplest variation, GD for OLS with a constant value of the learning rate, resulted in a polynomial exceptionally close to the one acquired from the theoretical solution, that is the inversion of the Hessian matrix, for a version of Stone's equation that includes random noise. 
+Inspired by the work of \cite{Stone_1978}, I performed a polynomial fit analysis on the non-dimensional meridional heat transport equation, using a series of machine learning techniques. After applying plain Ordinary Least Squares (OLS) and Ridge regression, as well as their Bootstrap and Cross-Validation resampling variations, I concluded that the polynomial degree should be at least 6, in order to achieve a satisfactory bias-variance trade-off. Moving into choosing the optimal polynomial coefficients, I used plain Gradient Descent (GD) and Stochastic Gradient Descent (SGD), both with and without momentum, on OLS and Ridge regression. The learning rate was tuned by varying its constant values and exponentially but I also tested the effects of Adaptive Gradient Algorithm (AdaGrad), Root Mean Square propagation (RMS-prop) and ADAptive Moment estimation (ADAM) tuning techniques. Using the simplest variation, GD for OLS with a constant learning rate, resulted in a polynomial exceptionally close to the one acquired from the theoretical solution, that is the inversion of the Hessian matrix, for a version of Stone's equation that includes random noise. 
 
 \section{Introduction}
+
+\subsection{Theoretical background: \cite{Stone_1978}}\label{intro1}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 “How is the total meridional heat transport dependent on the particular dynamics and structure of the atmosphere-ocean system?”
 
@@ -37,20 +50,20 @@ This is one of the questions Stone addressed in his 1978 paper (\cite{Stone_1978
     \frac{dF}{d\phi} = 2\pi\cdot{R^2}\cdot{cos\phi}\cdot{[Q\cdot{(1-\alpha)}-I]}, 
 \end{equation}
 
-where F is the total flux across a latitude belt,  R= $6.37 \cdot{10^6}$ is the radius of the Earth, Q is the mean \textit{incident} solar radiation per unit area at latitude $\phi$, $\alpha$ is the mean albedo at latitude $\phi$ and I is the mean \textit{emitted} thermal radiation per unit area at latitude $\phi$.
+where \textit{F} is the total flux across a latitude belt,  \textit{R}= $6.37 \cdot{10^6}$ m is the radius of the Earth, \textit{Q} is the mean \textit{incident} solar radiation per unit area at latitude $\phi$, $\alpha$ is the mean albedo at latitude $\phi$ and \textit{I} is the mean \textit{emitted} thermal radiation per unit area at latitude $\phi$.
 
-He then proceeded into calculating F, using two models: one without and one with the axial tilt of the Earth, while setting $\alpha$ and I as constants, independent of $\phi$. His results can be seen in Fig. \ref{fig:Stone's plot}.
+He then proceeded into calculating \textit{F}, using two models: one without and one with the axial tilt of the Earth, while setting $\alpha$ and \textit{I} as constants, independent of $\phi$. His results can be seen in Fig. \boldsymbol{\ref{fig:Stone's plot}}.
 
 \begin{figure}[h]
     \centering
-        \includegraphics[width=0.65\textwidth]{Screenshot from 2023-04-24 13-50-08.png}
-        \textbf{\caption{\centering{Stone's curve for total energy flux across a latitude circle in the Northern Hemisphere against the latitude, $\phi$. The solid line comes from his model that includes the axial tilt but assumes $\alpha$ and I to be independent of latitude. The circles indicate the values of heat flux, assuming axial tilt but this time using the latitudinal dependency of $\alpha$ and I, calculated by \cite{Oort_Haar_1976}. The crosses indicate the values of heat flux, calculated by eq. (\ref{4})}}
+        \includegraphics[width=0.5\textwidth]{Screenshot from 2023-04-24 13-50-08.png}
+        \textbf{\caption{\centering{Stone's curve for total energy flux across a latitude circle in the Northern Hemisphere against the latitude, $\phi$. The solid line comes from his model that includes the axial tilt but assumes $\alpha$ and \textit{I} to be independent of latitude. The circles indicate the values of heat flux, assuming axial tilt but this time using the latitudinal dependency of $\alpha$ and \textit{I}, calculated by \cite{Oort_Haar_1976}. The crosses indicate the values of heat flux, calculated by eq.\ref{4}.}}
     \label{fig:Stone's plot}}
 \end{figure}
 
-The curve he gets for for constant $\alpha$ and I, axial tilt considered, is remarkably close to the values of F he gets from the calculation of \cite{Oort_Haar_1976}. At the same time, the results for the Northern Hemisphere (N.H.) are very similar to the ones for the Southern Hemisphere (S.H.), in spite of the considerable differences in topography and ocean cover between the two. In this way he confirmed that the total meridional heat flux is indeed independent of the latitudinal structure of its parameters. 
+The curve he gets for constant $\alpha$ and \textit{I}, axial tilt considered, is remarkably close to the values of \textit{F} he gets from the calculations of \cite{Oort_Haar_1976}. At the same time, the results for the Northern Hemisphere (N.H.) are very similar to the ones for the Southern Hemisphere (S.H.), in spite of the considerable differences in topography and ocean cover between the two. In this way he confirmed that the total meridional heat flux is indeed independent of the latitudinal structure of its parameters. 
 
-It would be interesting, however, to understand why this is so. For this, he rewrote eq. (\ref{1}) in non-dimensional form and then Fourier expanded its components, leading to the following expression:
+It would be interesting, however, to understand \textit{why} this is so. For this, he rewrote eq.\boldsymbol{\ref{1}} in non-dimensional form and then Fourier-expanded its components, concluding to the following expression:
 
 \begin{equation}\label{2}
     \frac{df}{dx} = s\alpha-i, 
@@ -67,116 +80,1489 @@ where:
 \end{itemize}
 
 \newline
-After expanding the s, a and i coefficients in Legendre Polynomials, a common technique for spherical coordinates, while assuming zero heat transport at the North Pole as a boundary condition, he ended up with the following expression:
+After expanding the \textit{s}, $\alpha$ and \textit{i} coefficients in Legendre Polynomials, a common technique for spherical coordinates, while assuming zero heat transport at the North Pole as a boundary condition, he ended up with the following expression:
 
 \begin{equation}\label{3}
     f= (s_0\cdot{a_0} + \frac{s_2 \cdot{a_2}}{5} + ...-i_0)(x-1)+ (s_0\cdot{a_2} + s_2\cdot{a_0} + \frac{2}{7}s_2\cdot{a_2}+...-i_2)(\frac{x^3-x}{2})+...
 \end{equation}
 
-Yet, assuming that the system is in equilibrium, that is there is not heat flux in the equator, and considering the values for the s, $\aplha$, i coefficients, tabulated by \cite{Ellis_Haar_1976}, he simplified eq.(\ref{3}) into:
+Yet, assuming that the system is in equilibrium, that is, that there is not heat flux in the equator, and considering the values for the \textit{s}, $\alpha$ and \textit{i} coefficients, tabulated by \cite{Ellis_Haar_1976}, he simplified eq.\boldsymbol{\ref{3}} into:
 
 \begin{equation}\label{4}
     f= \frac{1}{2}(s_0\cdot{a_2}+s_2\cdot{a_0}+ \frac{2}{7}s_2\cdot{a_2}-i_2)({x^3-x})
 \end{equation}
 
-From this equation one can gather that, although the s, $\alpha$, i coefficients affect the \textit{magnitude} of the heat flux, they do not affect its \textit{distribution} and therefore the maximum of the curve always lies around 35$^{\circ}$ , even with abrupt changes of these coefficients.
+From this equation one can gather that, although the \textit{s}, $\alpha$ and \textit{i} coefficients affect the \textit{magnitude} of the heat flux, they do not affect its \textit{distribution} and therefore the maximum of the curve always lies around 35$^{\circ}$, even with abrupt changes of these coefficients.
 
-The accuracy of the produced curve, compared to the heat flux values calculated by \cite{Oort_Haar_1976}, is fascinating, especially given the simplicity of Stone's reasoning. As an exercise to study optimization, it would be interesting to try approaching Stone's eq. (\ref{4}) with various machine learning methods. For this, I modelled eq. (\ref{4}) as a noisy dataset with x being the values of latitude for the N.H. (x \in [0, $\pi/2$]) and y being the value of f with added noise, that is, each value of f, $f_i$,  gets replaced by a value, randomly picked, from a normal distribution with $\mu=f_i$, $\sigma= |0.05\cdot{f_i}|$. This leads to a different dataset for each run. Yet, if the use of actual measurements is later needed, although they will be fixed, swifting from one dataset to another, in case I need to test multiple datasets, will be like running the code again and getting a slightly different f for each run. Needing an approximation immune to such swifts, I kept testing f with added random noise though all the phases of this project. 
+\subsection{Present research}\label{intro2}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Having established my dataset, I moved to settling on the degree of the polynomial fit. To make my reasoning and conclusions understandable, I give an introduction to the training methods I used in Sec.2.1., while my final decision on the polynomial degree and the best method to find it is given in Sec.2.2.
+The accuracy of the produced curve, compared to the heat flux values calculated by \cite{Oort_Haar_1976}, is fascinating, especially given the simplicity of Stone's reasoning. As an exercise to study optimization, it would be interesting to approach Stone's eq.\boldsymbol{\ref{4}} by trying out various machine learning techniques. For this, eq.\boldsymbol{\ref{4}} was modelled as a noisy dataset with x being the values of latitude ($\phi$) for the N.H. (x \in [0, $\pi/2$]) and y being the value of \textit{f} with added noise, that is, each value of \textit{f}, $f_i$,  gets replaced by a value, randomly picked, from a normal distribution with $\mu=f_i$, $\sigma= |0.05\cdot{f_i}|$. This leads to a different dataset for each run. But if the use of many different datasets is later needed, although their points will be fixed, swifting from one dataset to another, will be like running the code again and getting a slightly different \textit{f} for each run. Needing an approximation immune to such swifts, random noise was added to \textit{f} though all the phases of this project. 
 
-++++which training methods, OLS, Ridge, bootstrap, cv
+At this point, it is important to remind to the reader that \textit{f} is a \textit{non-dimensional} expression for the meridional heat flux, as a component of eq.\boldsymbol{\ref{2}}, receiving very small values as will later be seen (i.e., Fig.\boldsymbol{\ref{fig:y_ols_gd}}). Plus, the calculations were performed for $\phi$ expressed in radians: [0, $\pi/2$] or [0, 1.5708]. Therefore, the domains of both x and y are of a small order of magnitude and thus, no scaling was performed to the dataset.
 
-In order to settle on the best coefficients for the polynomial, I went through 24 optimization methods. In Sec. 3.1. I give a brief overview of their theoretical basis, while I give the results of my investigation, along with the best technique for this dataset in Sec. 3.2. 
+The dataset having been established, it can now be approached by a simple polynomial fit. In order to settle on the polynomial degree, OLS and Ridge regression were applied to the dataset, along with bootstrap and cross-validation resampling. A theoretical layout of these methods can be found in Secs. \ref{ml1}-\ref{resample}, while the final decision on the polynomial degree and the best method to find it is given in Sec. \ref{ml2}.
 
-A brief discussion follows in Sec.4, regarding my results, along with suggestions for future work on modelling the meridional heat transport.
+To optimize the polynomial coefficients, GD and SGD with and without momentum, coupled with 5 methods of tuning the learning rate were used. In Secs. \ref{opt1}- \ref{gamma} a brief overview of their theoretical basis is given, while the results of this investigation, along with the best technique for this dataset are laid in Sec. \ref{opt2}. 
 
-For the interested reader, there are some results I am not elaborating on in the APPENDIX part, while all of my calculations can be found in my \href{https://github.com/ChristinaKappatou/CompSci_Project/tree/main/Project1}{GitHub page}. 
+A brief discussion follows in Sec. \ref{results}, regarding the results and suggestions for future work on modelling the meridional heat transport follow right up, in Sec \ref{future}.
+
+For the interested reader, there are some results in the Appendices part of the report, that are not included in the main text, while all of the codes can be found in my \href{https://github.com/ChristinaKappatou/CompSci_Project/tree/main/Project1}{GitHub page}, where all of the computations performed during this research can be reproduced. 
+
+\section{Methods for assessing the polynomial degree}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Needing to settle on the polynomial degree that fits best Stone's equation, I calculated the MSE of the assessed heat flux function, against the noisy version of Stone's equation, using plain OLS and Ridge regression, as well as their resampling variations with bootstrap and cross validation. A small introduction to the theoretical basis of these methods is considered necessary at this point for the understanding of my reasoning and conclusions further on. 
+
+\subsection{Regression methods}\label{ml1}
+
+Through regression methods we aim to find a dependence of the mean value of some random variable on another variable or on several variables (\href{http://encyclopediaofmath.org/index.php?title=Regression&oldid=48472}{Encyclopedia of Mathematics}). Extending this concept, having an input and an output dataset, we aim to find a continuous function that connects the two. 
+
+One of the most common regression methods is the Linear Regression (\href{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapter1.html}{Hjorth-Jensen}), according to which we try to fit to our output dataset, \textbf{y} a model that follows the relationship:
+
+\begin{equation}\label{regression}
+    \boldsymbol{\Tilde{y}}=\boldsymbol{X\cdot \beta} + \boldsymbol{\epsilon},
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $\boldsymbol{\Tilde{y}}$ is the new model we use to approach the output dataset, \textbf{y}.
+    \item \textit{\textbf{X}} is the \textit{design matrix} of the model. It is constructed by receiving the input values, $x_i$ of the data and then arranging them in a polynomial form (Vardemonde matrix) or any other orthogonal function (sinusoidal, cosinusoidal, Fourier expansion, etc). In the present study \textit{\textbf{X}} will have a simple polynomial expression. 
+    \item \boldsymbol{\beta} is the vector containing coefficients of the linear relationship.
+    \item $\boldsymbol{\epsilon}$ some noise we add to the model, usually following a normal distribution: $\boldsymbol{\epsilon} \sim N(0, \sigma^2)$
+\end{itemize}
+
+The main challenge in all regression methods is finding the optimum value of the vector $\boldsymbol{\beta}$, the one that minimizes the difference between the actual output, \textbf{y} and the model's output, $\boldsymbol{\Tilde{y}}$. In the present research, three methods were studied in order to obtain these coefficients. In the sections that follow, the reader can find the basic elements of Ordinary Least Squares (Sec. \ref{ols}), Ridge (Sec. \ref{ridge}) and LASSO (Sec. \ref{lasso1}) regressions. Although some additional optimization techniques will later be added to these basic regression methods, they are enough at this point to at least conclude on the degree of the polynomial that will fit the dataset best. 
+
+\subsubsection{Ordinary Least Squares (OLS)}\label{ols}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Set as \textit{\textbf{y}} the noisy version of Stone's heat flux function, as described in Sec. \ref{intro2} above and $\boldsymbol{\Tilde{y}}= \textbf{X}\cdot{\boldsymbol{\beta}}$ the polynomial to fit \textbf{y}. The noise in included in $\boldsymbol{\Tilde{y}}$ itself. 
+
+The aim of every machine learning technique is to minimize the error between the values of \textbf{y} and $\boldsymbol{\Tilde{y}}$. 
+
+The Mean Squared Error is used to represent the difference of these two values. In Ordinary Least Squares, the MSE is defined as:
+
+\begin{equation}\label{mse_ols}
+    \textbf{MSE}=\frac{1}{n}\cdot{(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})^T(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})}
+\end{equation}
+
+Therefore, we are now looking for the polynomial coefficients that will minimize the MSE, or, in other words, the $\boldsymbol{\beta}$ that gives:
+
+\begin{equation}\label{minimizing} 
+    \frac{\partial \boldsymbol{MSE}}{\partial\boldsymbol{\beta}}=0    
+\end{equation}
+
+Following the reasoning of \cite{Hastie_Trevor_Tibshirani}, Sec.3.2: from eqs. $\boldsymbol{\ref{mse_ols}}$ and $\boldsymbol{\ref{minimizing}}$, setting $\boldsymbol{\omega}=\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}}$, we get:
+\begin{equation}\label{finding beta}
+\begin{aligned} 
+\frac{1}{n}\cdot\frac{\partial({\boldsymbol{\omega^T}\cdot{\boldsymbol{\omega}}})}{\partial\boldsymbol{\beta}}={} & 0 \Rightarrow \frac{\partial(\boldsymbol{\omega^T}\cdot{\boldsymbol{\omega}})}{\partial\boldsymbol{\beta}}=0\Rightarrow
+\boldsymbol{\omega^T}\cdot{\frac{\partial \boldsymbol{\omega}}{\partial\boldsymbol{\beta}}} + \boldsymbol{\omega^T}\cdot{\frac{\partial \boldsymbol{\omega}}{\partial\boldsymbol{\beta}}} =0\Rightarrow \\
+             
+&\hspace{2.75cm} \Rightarrow 2\cdot{\boldsymbol{\omega^T}}\cdot{\frac{\partial \boldsymbol{\omega}}{\partial\boldsymbol{\beta}}}=0 
+\Rightarrow (\textbf{y}-\textbf{X}\cdot\boldsymbol{\beta})^T \cdot \frac{\partial }{\partial\beta} (\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})\Rightarrow \\  
+            
+&\hspace{2.75cm} \Rightarrow (\textbf{y}-\textbf{X}\cdot\boldsymbol{\beta})^T \cdot [\frac{\partial \boldsymbol{y}}{\partial\beta} - \frac{\partial}{\partial\beta} (\textbf{X}\cdot{\boldsymbol{\beta}})]=0\hspace{7.5cm}
+\end{aligned}          
+\end{equation}
+
+because $\textbf{y} \neq \textbf{y}(\boldsymbol{\beta})$ and $\textbf{X} \neq \textbf{X}(\boldsymbol{\beta})$, eq. \textbf{(8)} becomes:
+\begin{equation}\label{9}
+\begin{aligned}
+    (\textbf{y}- \textbf{X}\cdot\boldsymbol{\beta})^T \cdot \textbf{X} =0{} & \Rightarrow \textbf{y}^T\cdot\textbf{X} - (\textbf{X}\cdot\boldsymbol{\beta})^T\cdot\textbf{X}=0 \Rightarrow(\textbf{X}\cdot\boldsymbol{\beta})^T\cdot\textbf{X}= \textbf{y}^T\cdot\textbf{X}\Rightarrow\\   
+   
+&\hspace{3.1cm} \Rightarrow 
+    (\textbf{X}\cdot\boldsymbol{\beta})^T\cdot (\textbf{X}^T)^T = \textbf{y}^T\cdot(\textbf{X}^T)^T\Rightarrow\\
+    
+&\hspace{3.2cm}\Rightarrow (\textbf{X}^T\cdot \textbf{X} \cdot \boldsymbol{\beta})^T = (\textbf{X}^T \cdot \textbf{y})^T \Rightarrow 
+    \textbf{X}^T\cdot\textbf{X}\cdot\boldsymbol{\beta} = \textbf{X}^T\cdot\textbf{y}\Rightarrow\\
+    
+&\hspace{3.1cm} \Rightarrow\boldsymbol{\beta}=(\textbf{X}^T\cdot \textbf{X})^-^1  \cdot \textbf{X}^T \cdot \textbf{y}\hspace{8.5cm} 
+\end{aligned}    
+\end{equation} 
+The second to last step can be taken because the transpose of a matrix is unique, therefore if two transposed matrices are equal with each other, so are the matrices themselves. 
+
+Finding the values of the vector $\boldsymbol{\beta}$  is therefore relatively simple. The only challenge from this point on would be to find the inverse of the Hessian matrix ($\textit{\textbf{H}}=\textbf{X}^T\cdot\textbf{X}$). LU, QR and Cholesky decomposition are some of the typical ways to process this. Yet, for large dimensionalities of \textit{\textbf{X}}, these methods could lead to singularities. In this case, one could invert \textit{\textbf{H}}, using Singular Value Decomposition (SVD). Because the present case turned out rather simple, I applied a plain matrix inversion in my code. However, if the reader is interested in applying OLS to more complicated cases, SVD would be a good alternative to matrix inversion and more details on the technique can be found in Appendix \ref{svd1}.
+
+\subsubsection{Ridge regression}\label{ridge}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Another, rather cheap, way to avoid overflowing during the inversion of \textit{\textbf{H}} is adding a small diagonal component to the cost function, here the \textbf{MSE}, as follows (\cite{Hastie_Trevor_Tibshirani}, Sec. 3.4.1):
+
+\begin{equation}
+    \textbf{MSE}=\frac{1}{n}\cdot[{(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})^T(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})} + \lambda\cdot(\boldsymbol{\beta}^T\cdot\boldsymbol{\beta})]
+ \end{equation}
 
 
+Following the same process as before, we end up with the optimum coefficients being expressed by:
 
+ \begin{equation}\label{beta_ridge}
+      \boldsymbol{\beta}=(\textbf{X}^T\cdot \textbf{X}+\lambda\cdot\textbf{I})^-^1  \cdot \textbf{X}^T \cdot \textbf{y} 
+ \end{equation}
 
+, with \textbf{I} being the identity matrix. 
 
+$\lambda$ is a positive constant as small as we like but not zero (for $\lambda=0$ we are back to OLS, so we are not talking about Ridge Regression anymore). We can minimize the \textbf{MSE} by tuning this hyperparameter $\lambda$.
 
+\subsubsection{LASSO regression}\label{lasso1}%%%%%%%%%%%%%%%%%%%%%
 
+Another alternative to circumvent the calculation of the inverse of \textbf{H} is expressing the \textbf{MSE} as follows:
 
-  
+\begin{equation}
+    \textbf{MSE}=\frac{1}{n}\cdot[{(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})^T(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})} + \lambda\cdot||\boldsymbol{\beta}||_1]
+ \end{equation}
 
+, where $||\boldsymbol{\beta}||_1$ is the norm-1 value of $\boldsymbol{\beta}$, that is: 
 
-  
+\begin{equation}
+    ||\boldsymbol{\beta}||_1= \sum_{i}^{} |\beta_i|    
+\end{equation}
 
+In this case, because the derivative 
 
+\begin{equation}
+\[ 
+        \frac{d|\beta|}{d\boldsymbol{\beta}}= sgn(\boldsymbol{\beta})= \left\{
+    \begin{array}{ll}
+          1&,  \beta>0 \\
+          -1&,  \beta<0\\          
+    \end{array} \tag{\textbf{(14)}}
+    \right. 
+\]
 
+\end{equation}
 
+minimizing the \textbf{MSE} and following the same steps as before lead to the following expression for $\beta$:
 
+\begin{equation}
+    \frac{\partial\boldsymbol{MSE}}{\partial\boldsymbol{\beta}} = -2\boldsymbol{X^T}\cdot (\textbf{y}-\boldsymbol{X\beta})+\lambda\cdot  sgn(\boldsymbol{\beta}) =0 \Rightarrow \boldsymbol{X^TX\beta}+ \lambda\cdot sgn(\boldsymbol{\beta)} = 2 \boldsymbol{X^Ty}
+\end{equation}
 
+This doesn't lead to an analytical expression for \boldsymbol{\beta} as before. Indeed, to calculate the polynomial coefficients, we have to work on the level of the matrix elements. 
 
+The final expression we get for \boldsymbol{\beta} is:
 
+\begin{equation}\label{lasso}
+        \[ 
+        \beta_i= \left\{
+    \begin{array}{ll}
+          y_i-\frac{\lambda}{2}&,  y_i>\frac{\lambda}{2} \\
+          y_i+\frac{\lambda}{2}&,  y_i<-\frac{\lambda}{2}\\ 
+          0&, y_i\leq|\frac{\lambda}{2}|
+    \end{array} \tag{\textbf{(16)}}
+    \right. 
+    \] 
+\end{equation}
+ 
+Again here, $\lambda$ is a tuneable hyperparameter that can minimize the \textbf{MSE}.
 
-\section{Methods for assessing the polynomial degree}
+It would be interesting at this point to visualize the effect of the hyperparameter $\lambda$ of Ridge and LASSO Regressions on the \boldsymbol{\beta} coefficients.
 
-Needing to settle on the polynomial degree that fits best Stone's equation, I calculated the MSE of the assessed heat flux function, against a noisy version of Stone's, using plain OLS and Ridge regression, as well as their resampling variations with bootstrap and cross validation. A small introduction to the theoretical basis of these methods is considered necessary at this point for the understanding of my reasoning and conclusions further on. 
+Comparing eqs.\textbf{(9)} and $\boldsymbol{\ref{beta_ridge}}$, we get that:
 
--Background
--Results
+\begin{equation}
+    \boldsymbol{\beta_R_i_d_g_e}=\frac{\boldsymbol{\beta_O_L_S}}{1+\lambda}=\frac{\textbf{y}}{1+\lambda}
+\end{equation}
+, for \textit{\textbf{X}} being an orthogonal matrix. 
 
+This and eq.$\boldsymbol{\ref{lasso}}$ can be expressed in the following plot:
 
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.5\textwidth]{Screenshot from 2023-04-27 14-23-15.png}
+        \textbf{\caption{\centering{The effect of each regression method on the polynomial coefficients, $\boldsymbol{\beta}$}}
+    \label{fig:ols_r_l}}
+\end{figure}
 
+As we can see, Ridge regression scales down the $\boldsymbol{\beta}$ coefficients, while LASSO regression sets to zero certain values of $\boldsymbol{\beta}$ for a part of the $\lambda$ domain. This is commonly known as “soft-thresholding” (\cite{Mehta_2019}).
+
+\subsection{Assessing a model: the bias-variance trade-off}\label{assess}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Following the reasoning of \cite{Mehta_2019}, we split the \textbf{MSE} into the $Bias^2$, \textit{Variance} and \textit{Noise} components as follows:
+
+\begin{equation}
+\begin{aligned}
+    \textbf{MSE}= \frac{1}{n}\cdot{(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})^T(\textbf{y}-\textbf{X}\cdot{\boldsymbol{\beta}})}={} & \mathbb{E}[\sum_{i}^{} (y_i-\Tilde{y_i})^2]=\\    
+    & \mathbb{E}[\sum_{i}^{}(y_i-f(x_i)+f(x_i)-\Tilde{y_i})^2]=\\
+    &\sum_{i}^{}{\mathbb{E}[(y_i-f(x_i))^2]+\mathbb{E}[(f(x_i)-\Tilde{y_i})^2]+2\mathbb{E}[(y_i-f(x_i))(f(x_i)-\Tilde{y_i})]},
+\end{aligned}    
+\end{equation}
+where:
+
+\begin{itemize}
+    \item{ $[y_i-f(x_i)], [f(x_i)-\Tilde{y_i}]$ statistically independent, therefore:
+    \newline
+    
+    $\mathbb{E}[(y_i-f(x_i))(f(x_i)-\Tilde{y_i})]=\mathbb{E}[(y_i-f(x_i))]\cdot \mathbb{E}[f(x_i)-\Tilde{y_i}]$        
+     \newline
+     
+    Now, because we've defined: $y_i=f(x_i)+\epsilon \Rightarrow y_i-f(x_i)=\epsilon$, so:
+\newline        
+
+$\hspace{0cm}\mathbb{E}[(y_i-f(x_i))(f(x_i)-\Tilde{y_i})]=\mathbb{E}[\epsilon]\cdot \mathbb{E}[f(x_i)-\Tilde{y_i}] = 0\cdot \mathbb{E}[f(x_i)-\Tilde{y_i}]=0 \Rightarrow$
+\begin{equation}
+%\begin{aligned}
+\hspace{-2.1cm}\Rightarrow2\mathbb{E}[(y_i-f(x_i))(f(x_i)-\Tilde{y_i})] =0   
+%\end{aligned}
+\end{equation}} 
+
+\item 
+$\mathbb{E}[(y_i-f(x_i))^2]= \mathbb{E}[\epsilon^2]=\sigma^2$
+{\begin{equation}
+\end{equation}}    
+    
+\item {
+
+$    \mathbb{E}[(f(x_i)-\Tilde{y_i})^2] = \mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}]+\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i})^2]=$
+\begin{equation}
+\begin{aligned}        
+\hspace{0.2cm} =\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])^2]+\mathbb{E}[(\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i})^2]+2\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])(\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i})],
+\end{aligned}
+\end{equation}
+    
+    where:
+    $[f(x_i)-\mathbb{E}[\Tilde{y_i}]], [\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i}]$ statistically independent, therefore:
+\newline
+    
+$\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])(\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i})]= \mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])]\cdot\mathbb{E}[\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i}]= $
+
+$\hspace{4.5cm}=\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])]\cdot{\mathbb{E}[\mathbb{E}[\Tilde{y_i}]-\mathbb{E}[\Tilde{y_i}]}=$
+
+$\hspace{4.5cm}=\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])]\cdot{\mathbb{E}[\Tilde{y_i}]-\mathbb{E}[\Tilde{y_i}]}=$ 
+\begin{equation}
+\hspace{-2.6cm}=\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])]\cdot0=0
+\end{equation}}
+\end{itemize}        
+Therefore:
+
+\begin{equation}\label{msesplitted}
+    \textbf{MSE}= \sum_{i}^{}{\mathbb{E}[(f(x_i)-\mathbb{E}[\Tilde{y_i}])^2]} +\sum_{i}^{}{\mathbb{E}[(\mathbb{E}[\Tilde{y_i}]-\Tilde{y_i}])^2} +\sum_{i}^{}{\sigma^2} 
+\end{equation}
+
+The first term on the right-hand side of eq.$\boldsymbol{\ref{msesplitted}}$ is the \textit{$Bias^2$}, measuring the deviation of the estimate from the true value of the model.
+
+The second term is the \textit{Variance}, that measures the fluctuation of the estimate from the actual value in proportion to the number of data each time available.  
+
+The last term is the effect of the noise we've added to our model and it is an \textit{irreducible} error\\  (\cite{Hastie_Trevor_Tibshirani}). So, because both \textit{$Bias^2$} and Variance cannot take any negative values, the total MSE cannot drop below the value of the model's noise. 
+
+To understand the concept of \textit{bias-variance trade-off}, we need to focus on eq.$\boldsymbol{\ref{msesplitted}}$. As we can see, in order to have a low \textbf{MSE}, we need to aim for low bias and variance. Yet one of the main challenges in machine learning is finding a balance between the \textit{$Bias^2$} and the variance. Keeping the \textbf{MSE} constant we see that raising the bias of the model (by choosing it to be of small complexity) leads to a lower variance. Therefore, even if the amount of data is limited, that would cause very little noise. 
+
+This is also a good point to mention the concepts of \textit{underfitting} and \textit{overfitting} (see also \cite{Hastie_Trevor_Tibshirani}, pg. 221). 
+
+When we start from small polynomial degrees while training a model, there is a high chance that our model will not fit the data accurately. For example, in Figs. \ref{fig:ols_mse_200} it is obvious that for polynomial of degree lower or equal to 3 the MSE is significant and the difference between the training and test \textbf{MSE} is prominent. This is the case of underfitting. If, however, we raise the polynomial degree (or the complexity of the model in general), the model fits the training data too much, not recognising the test data as efficiently. This is the case of overfitting. Both cases should be kept in mind when evaluating the model's bias-variance trade-off.
+
+\subsection{Resampling methods}\label{resample}
+
+During resampling, the model of interest if being fitted to a number of random samples, repeatedly drawn from the train dataset. In that way, we can obtain information that would not be available from fitting the model only once using just the original training sample (\href{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapter3.html}{Hjorth-Jensen}).
+\subsubsection{Bootstrap resampling}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Suggested by \cite{Effron_bootstrap} the Bootstrap resampling technique can be described by the following phseudocode:
+\newline
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+\textbf{Algorithm 1: Bootstrap resampling} 
+
+After splitting out dataset to test and train data, we pick up a number or random datapoints from each set and evaluate the MSE of each subset. The final MSE is the mean of the MSE of each subset. Fig.\ref{fig:figure} is a good visualization of this technique. 
+
+\noindent\rule{16.6cm}{0.4pt}
+
+\textbf{for} i=1, M (number of bootstrap resamplings):
+
+\hspace{0.5cm}-pick up a random number of the train dataset (D) and create a new dataset (D*), of equal size, replacing
+
+\hspace{0.53cm}the missing slots with already selected data values.
+    
+\hspace{0.5cm}-train the model.
+    
+\hspace{0.5cm}-calculate the $MSE_t_e_s_t(i)$ for the original (untouched) test dataset.
+    
+\textbf{end loop}
+
+compute: $MSE= \frac{1}{M}\sum_{i=1}^{M}{MSE_t_e_s_t(i)}$
+\newline
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.6\textwidth]{Screenshot from 2023-04-26 15-07-06.png}
+        \textbf{\caption{\centering{The Bootstrap resampling techniques, as explained by \cite{Mehta_2019}. D is the originally split training dataset. D* are the randomly selected subgroups (bootstrapped datasets). For each one of them, the MSE (M*) is calculated, while the final MSE is the mean of all M*s.}}\label{fig:figure}}
+    
+\end{figure}
+
+The number of bootstraps is a hyperparameter in itself, ranging from 1 to the total number of datapoints (a computationally expensive option).
+
+Working with different training datasets during the bootstrapping procedure reduces the variance of our model. Yet, we pay this with a raise in the bias of the model (\cite{Mehta_2019}, pg.39).
+
+\subsubsection{Cross-Validation (CV) resampling}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Cross-Validation resampling, first studied in a regression context by  Stone (\cite{stone_1974}, \cite{stone_1997}) for the LOOCV case (see below Fig.\ref{fig:cv1}) and Geisser (\cite{geisser_1974}, \cite{geisser_1975}) for the V-fold case (\cite{10.1214/14-AOS1240}) can be described through the following pheudocode:
+\newline
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+\textbf{Algorithm 2: Cross Validation resampling}
+ 
+We split the dataset into a number of k, roughly equal-sized, subsets, called \textit{folds}. Unlike in the bootstrap case, the subsets we split the datasets into are now \textit{mutually exclusive}. Each time, one of the subsets is the test dataset and the rest the training datasets. Every subset gets to be a test set in turn. 
+The MSE of the dataset is calculated for every test dataset and the final MSE is the mean of the MSE of each test subset. 
+\noindent\rule{16.6cm}{0.4pt}
+\newline
+
+shuffle the dataset randomly.
+
+split the dataset into k groups.
+
+\textbf{for} i \textbf{in} k:
+
+\hspace{0.5cm} -decide which group to use as set for test data
+
+\hspace{0.5cm} -take the remaining groups as a training data set
+
+\hspace{0.5cm} -train the model
+    
+    calculate the $MSE_t_e_s_t(i)$ the test dataset
+
+\textbf{end loop}
+
+compute: $MSE= \frac{1}{k}\sum_{i=1}^{k}{MSE_t_e_s_t(i)}$
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm
+
+Fig.(\ref{fig:cv1}) is a good visualization of the splitting of the dataset.
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.5\textwidth]{Screenshot from 2023-04-26 15-13-25.png}
+        \textbf{\caption{\centering{The splitting of the dataset in training and test subsets. Image borrowed from \cite{Hastie_Trevor_Tibshirani}}}\label{fig:cv1}}
+    
+\end{figure}
+
+The number of k-folds is usually chosen to be 5 or 10. The case in which it is equal to the number of samples is called \textit{Leave-One-Out Cross-Validation} (LOOCV). LOOCV tends to have a high variance and is also computationally expensive. Yet it produces almost zero bias. On the other hand, for k=5 or 10, the bias is larger but the variance smaller \cite{Hastie_Trevor_Tibshirani}. The choice of the optimum number of k-folds depends on the model to fit. As we will see later, in the present study, the LOOCV tends to give the best results, without any significant computational cost.
+
+\subsection{Results}\label{ml2}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+All the three regression methods mentioned above were tested against the dataset described in Sec.\ref{intro2}. After trying the plain version of all, I applied bootstrap and cross validation resampling, in search for a definite value of the polynomial degree. The results for OLS and Ridge regression as well as their resampling variations are all listed and analysed in the sections that follow. Yet, because the results of LASSO regression did not prove very helpful in deciding upon the polynomial degree, they are not mentioned here. The interested reader can easily reproduce them, using the respective code from my \href{https://github.com/ChristinaKappatou/CompSci_Project/blob/main/Project1/03.LASSO.ipynb}{GitHub page}. 
+
+\subsubsection{Plain OLS Regression}\label{mse_olss}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+I performed an OLS fitting to the noisy version of eq.\boldsymbol{\ref{4}}, varying the number of datapoints (200, 500 and 1000) and the percentage of the training and test data (test data being 25\%, 50\% and 75\% of the total dataset).
+
+The calculated MSE for each combination is given in Figs. \ref{fig:ols_mse_200}-\ref{fig:ols_mse_1000}, while the respective correlation figures can be found in Appendix \ref{R2}.
+
+Raising the number of datapoints gives, as expected, a smaller MSE and a better match between the training and test MSE values. Yet, since the aim of this analysis is to settle on a polynomial degree, acquiring the smallest value of the MSE is of secondary importance. Already from the first set of runs (for n=200) we can see that the MSE flattens to a near-zero value for polynomial degree greater or equal to 4, a result that we do get from the other two sets of runs (n=500 and n=1000) but in a longer set of iterations. Therefore, it is safe to settle on \textbf{n=200} datapoints for the rest of the study. This is a fairly small number but data availability is not always ample, so it is preferable to develop a model, capable of fair predictions on a small dataset.
+
+In this context, one can also observe that there is obvious underfitting happening for polynomial degrees lower than or equal to 3 but no overfitting happening afterwards. As we mentioned in Sec. (\ref{assess}) a small polynomial degree leads to a model of high bias. Therefore, although the variance is in this case small, the contribution of the bias to the MSE is significant, leading to large values of the latter. However, we also discussed that the variance of the model depends on the number of datapoints available. If the dataset is large enough, that leads to a low variance, regardless of the model's complexity. This is what is happening here; because the number of datapoints is more than enough, even from the first set of runs with n=200, the variance is always small and therefore for polynomial degrees larger than 3, where the bias gets small as well, the total MSE, being the sum of the bias, the variance and the default model noise (see eq. \boldsymbol{\ref{msesplitted}}) gets a very small value as well. Had the dataset been smaller, the variance would have been of a larger default value, leading to overfitting way earlier in the tested range of polynomial degrees.
+
+The other parameter I varied was the percentage of the test data with respect to the whole dataset. It gets more obvious at the last two runs (for n=500 and n=1000) that the case where the test dataset is 50\% of the entire dataset is the one with the largest difference between the test and training MSE. The results for 25\% and 75\% are in general very similar, inspite 75\% being a rather high percentage for a test dataset. Finally, the \textbf{test dataset was chosen to be 25\%} of the whole dataset, as this is a usual value. \\
+
+\newline 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_200_test_25.png}
+         \caption{n=200, test size = 25\%.}
+         \label{fig:ols_mse_200_25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_200_test_50.png}
+         \caption{n=200, test size = 50\%.}
+         \label{fig:ols_mse_200_50}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_200_test_75.png}
+         \caption{n=200, test size = 75\%.}
+         \label{fig:ols_mse_200_75}
+     \end{subfigure}
+        \caption{MSE for the plain OLS case with n=200 datapoints.}\label{fig:ols_mse_200}        
+\end{figure}
+\\
+\newline
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_500_test_25.png}
+         \caption{n=500, test size = 25\%.}
+         \label{fig:ols_mse_200_25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_500_test_50.png}
+         \caption{n=500, test size = 50\%.}
+         \label{fig:ols_mse_200_50}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_500_test_25.png}
+         \caption{n=500, test size = 75\%.}
+         \label{fig:ols_mse_200_75}
+     \end{subfigure}
+        \caption{MSE for the plain OLS case with n=500 datapoints.}
+        \label{fig:ols_mse_500}
+\end{figure}
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_1000_test_25.png}
+         \caption{n=1000, test size = 25\%.}
+         \label{fig:ols_mse_200_25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_1000_test_50.png}
+         \caption{n=1000, test size = 50\%.}
+         \label{fig:ols_mse_200_50}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_mse_n_1000_test_75.png}
+         \caption{n=1000, test size = 75\%.}
+         \label{fig:ols_mse_200_75}
+     \end{subfigure}
+        \caption{MSE for the plain OLS case with n=1000 datapoints.}\label{fig:ols_mse_1000}        
+\end{figure}
+\newpage
+\subsubsection{Bootstrap resampling on OLS}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Keeping the number of datapoints equal to 200 and the test set percentage equal to 25\% from above, I only varied the number of bootstrap resamplings in this case (1, 20 and 100). 
+
+Studying now the bias-variance trade-off of the model, it is interesting to see in Figs.\ref{fig:ols_bootstrap_200} that raising the number of bootstraps leads to a slight increase of the variance. This could be attributed to the fact that the variance is calculated as the mean of all the variances of for each bootstrap sample. Although each one of them has the same number of datapoints as the original training set, it is qualitatively different, due to the randomness of the resampling. Since variance is affected by the datapoints themselves, a qualitative change in the dataset it is calculated for (for example if some data get repeated many times in one sample) could affect its final value.
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols bootstrap/ols_mse_n_200_b_1.png}
+         \caption{number of bootstraps = 1.}
+         \label{fig:ols_bootstrap_200_1}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols bootstrap/ols_mse_n_200_b_20.png}
+         \caption{number of bootstraps = 20.}
+         \label{fig:ols_bootstrap_200_20}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols bootstrap/ols_mse_n_200_b_100.png}
+         \caption{number of bootstraps = 100.}
+         \label{fig:ols_bootstrap_200_100}
+     \end{subfigure}
+        \caption{Bias-variance trade-off for bootstrap resampling on OLS Regression with n=200 datapoints.}
+        \label{fig:ols_bootstrap_200}
+\end{figure}
+
+\subsubsection{Cross-validation resampling on OLS}\label{cvols}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Keeping the same values for the number of datapoints and test size, I applied CV resampling on the OLS regression, varying the number of k-folds (k=5, 10 or 200, corresponding to the LOO-CV case, since the number of datapoints is also 200) and compared the results with the case where the number of bootstraps is 20 (see Fig.\ref{fig:ols_bootstrap_200_20}). 
+
+It is interesting here that the result get closer to the bootstrap case as the number of k-folds raises, with the best ones belonging to the LOO-CV case, where the number of k-folds is 200. And yet, the results do not match completely before the polynomial degree gets equal to 4. It is important at this point to remember that both Bootstrap and CV are model \textit{assessing} techniques: they were used here to settle on the polynomial degree, the MSE values themselves not being as important yet. Therefore, it is easy now to see that both techniques agree that the degree of the polynomial must be over 4, a result we already had from the plain OLS Regression. 
+
+Unfortunately, we cannot go much further with OLS. The MSE seems to be very similar for polynomial degrees larger than 4 and, thus, at this point, we can make no clear assumptions. For this reason, we need to seek for another technique that highlights the impact of the polynomial degree on the MSE more. As we will see in the next section, Ridge regression can provide a more definite answer. 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols cv/ols_mse_cv_k5.png}
+         \caption{number of kfolds= 5.}
+         \label{fig:ols_cv_5}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols cv/ols_mse_cv_k10.png}
+         \caption{number of kfolds= 10.}
+         \label{fig:ols_cv_10}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols cv/ols_mse_cv_loo.png}
+         \caption{LOO cross-validation.}
+         \label{fig:ols_cv_loo}
+     \end{subfigure}
+        \caption{MSE for CV resampling on OLS with n=200 datapoints.}
+        \label{fig:ols_cv}
+\end{figure}
+
+\subsubsection{Plain Ridge Regression}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+In this case, the polynomial degree was varied in the same range as before, that is from 0 to 9, and the hyperparameter $\lambda$ in the range [$10^-^4, 10^1^0$]. 
+
+The calculated MSE for all combinations can be seen in Fig.\ref{fig:MSE}. This figure is particularly important because it enables us to decide on the polynomial degree just by one look! Indeed, it is easy to see that the band of polynomial degrees equal 5 and 6 give the minimum MSE. Because there is random noise included in the modelled heat flux function, the calculated MSE and thus the value of the polynomial degree that gives the best results varies for each run. Yet it always lies in this area. If the code is run many times, one can conclude that choosing the \textbf{polynomial degree to be equal to 6} is a safe decision for this modelling.
+
+It is interesting to notice here that overfitting is not out of the question for this case. Indeed, in Figs.\ref{fig:ridge} there is always some overfitting happening for $\lambda>10^3$ but it gets more prominent at the largest tested value of the polynomial degree, 9. An effort for interpreting this is given in the following section, where the bias-variance trade-off of the model is tested through bootstrap resampling. The case where the polynomial degree is equal to 6 is the one that provides the lowest amount of overfitting (but also underfitting) of the 3 cases plotted in Fig.\ref{fig:ridge}.
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=1\textwidth]{ridge/ridge_mse.png}
+        \textbf{\caption{\centering{MSE varying with the polynomial degree and the hyperparameter $\lambda$. Attention must be paid during reading this plot: each value of the x-axis corresponds to the \textit{numbering} of an integer power of $\lambda$. For example, 0 is for $\lambda=10^-^4$ (the beginning of the spectrum), 1 is for $\lambda=10^-^4$ e.t.c. The numbering of the y-axis represents the polynomial degree as it is. This plot was created using Scikit'learn's package, \textit{seaborn}. }\label{fig:MSE}}}
+    
+\end{figure}
+
+\begin{figure}
+     \centering
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge/ridge_degree_1.png}
+         \caption{Pol. degree=1.}
+         \label{fig:ridge_d1}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge/ridge_degree_6.png}
+         \caption{Pol. degree=6.}
+         \label{fig:ridge_d6}
+
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge/ridge_degree_9.png}
+         \caption{Pol. degree=9.}
+         \label{fig:ridge_d9}
+
+     \end{subfigure}
+        \caption{MSE for plain Ridge regression.}
+        \label{fig:ridge}
+\end{figure}
+
+\subsubsection{Bootstrap on Ridge}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Having settled on the polynomial degree, we can test the bias-variance trade-off of the model by applying bootstrap resampling on the previous Ridge regression algorithm. As can be seen from Figs.\ref{fig:ridge_d6_bootstrap}, the variance still remains low, the number of datasets being enough for this case too. It is also interesting to see how radically the bias increases by increasing the values of $\lambda$. 
+
+Compared to Fig.\ref{fig:ridge_d6}, these curves have the same sigmoid structure but reach to a higher MSE than in the plain Ridge regression case. This did not happen when we applied bootstrap resampling on OLS.  
+
+Again the little variance that exists seems to be raised slightly when raising the number of bootstraps. Yet increasing the number of bootstraps seems to give a less noisy curve.%why didn't we have any noise at all before???
+
+\begin{figure}
+     \centering
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge bootstrap/ridge_d6_b1.png}
+         \caption{number of bootstraps=1.}
+         \label{ridge_d6_b1}
+    \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge bootstrap/ridge_d6_b20.png}
+         \caption{number of bootstraps=20.}
+         \label{ridge_d6_b20}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge bootstrap/ridge_d6_b100.png}
+         \caption{number of bootstraps=100.}
+         \label{ridge_d6_b100}
+     \end{subfigure}
+        \caption{Bias-variance trade-off for bootstrap resampling on Ridge Regression with pol.degree=6.}
+        \label{fig:ridge_d6_bootstrap}
+\end{figure}
+
+\subsubsection{Cross-validation on Ridge}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Keeping the polynomial degree and the range of $\lambda$ stable, I applied CV to the Ridge regression algorithm, in order to compare the results with the bootstrap resampling case above.  Varying the number of k-folds (5, 10 or 200 for the LOO C-V case) leads to the results plotted in Figs.\ref{fig:ridge_cv}. Again, the best agreement with the bootstrap case (number of bootstraps=20) comes from the LOO C-V. Although the algorithm's MSE and the one we get from the scikit-learn CV algorithm match perfectly, the behaviour of the CV curves is altogether completely different than the bootstrap ones, save from he LOO CV case. 
+
+Yet, again because both Bootstrap and CV resampling are model-assessing techniques, if we had to settle on a value of $\lambda$, we can see that the area [$10^-^4$, $10^-^2$] is quite safe, whereas for greater values the MSE blows up abruptly. 
+
+\begin{figure}
+     \centering
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge cv/ridge_d6_k5.png}
+         \caption{number of kfolds=5.}
+         \label{ridge_d6_k5}
+
+    \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge cv/ridge_d6_k10.png}
+         \caption{number of kfolds=10.}
+         \label{ridge_d6_k10}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ridge cv/ridge_d6_loo.png}
+         \caption{LOO C-V.}
+         \label{ridge_d6_loo}
+     \end{subfigure}
+        \caption{The MSE calculated with CV on Ridge regression, compared with the boostrap resampling on Ridge regression for number of bootstraps = 20. CV was both calculated (red dashed line) and directly implemented from scikit-learn (solid purple line).}
+        \label{fig:ridge_cv}
+\end{figure}
 
 \section{Methods for optimizing the polynomial coefficients}
+Having settled on the polynomial degree, we are now looking for the coefficients that will give the minimum MSE and will, therefore, approach the model best. For this I employed the methods of Gradient Descent (GD) and Stochastic Gradient Descent (SGD) both with and without momentum. What this means is explained in the theory section that follows, along with the methods I used for tuning the learning rate, $\gamma$. Then my results (see Sec.\ref{finalresults}) and my final decision on the method that fits this case best can be better understood. This entire section reproduces the reasoning of \cite{Mehta_2019}, pg.14-18.
 
--Background
--Results
+\subsection{Optimization techniques}\label{opt1}
+\subsubsection{The Gradient Descent (GD)}
+
+Gradient Descent is inspired by the Newton-Raphson method, according to which we Taylor-expand the cost function (here, the MSE) around the optimum value of $\boldsymbol{\beta}$, $\boldsymbol{\hat{\beta}}$ in the following way:
+
+\begin{equation}\label{gd}
+    \boldsymbol{MSE(\hat{\beta})}= \boldsymbol{MSE(\beta_k)} + \boldsymbol{g^T(\beta_k)\cdot(\beta-\beta_k)} + \boldsymbol{\frac{1}{2}\cdot (\beta-\beta_k)^T \cdot H(\beta_k)\cdot (\beta-\beta_k)} + \boldsymbol{O((\beta-\beta_k)^3)},
+\end{equation}
+where:
+
+\begin{itemize}
+    \item $\boldsymbol{g^T(\beta_k)}= \boldsymbol{(\frac{\partial MSE}{\partial \beta_k})^T}= \frac{n}{2}\cdot\boldsymbol{X^T}\cdot(\boldsymbol{X\cdot\beta_k}-\textbf{y})$, following the differentiation process in Sec.\ref{ols}, is the gradient of the MSE with respect to the $\beta$ calculated from the previous iteration, $\beta_k$.
+
+    \item $\boldsymbol{H(\beta_k)}$ is the Hessian matrix of the second derivatives of MSE with respect to $\boldsymbol{\beta_k}$: $\boldsymbol{H(\beta_k)}=\textbf{\textit{J}}_{\frac{\partial \textbf{MSE}}{\partial \boldsymbol{\beta_k}}}$.
+
+    \item $\boldsymbol{O((\beta-\beta_k)^3)}$ are higher-order terms that get truncated.
+\end{itemize}
+
+Setting $\boldsymbol{b= \beta-\beta_k}$ we differentiate eq.\ref{gd} with respect to \textbf{b}, remembering that $\frac{\partial \textbf{MSE}}{\partial \textbf{b}}=0$. Therefore, we get:
+
+\begin{equation}
+    \textbf{b}=\boldsymbol{-H^-^1(\boldsymbol{\beta_k})\cdot\boldsymbol{g^T(\beta_k)}}\Rightarrow
+
+    \centering
+
+    \boldsymbol{\hat{\beta}}= \boldsymbol{\beta_k} - \boldsymbol{H^-^1(\boldsymbol{\beta_k})\cdot\boldsymbol{g^T(\beta_k)}}
+\end{equation}
+
+Yet, as we discussed in Sec. \ref{ols}, finding the $\boldsymbol{H^-^1}$ is not always feasible, due to the singularities that may lie in \textit{\textbf{H}}. A way to circumvent this is to replace $\boldsymbol{H^-^1}$ by a hyperparameter, $\gamma_k$, called the \textit{learning rate}, that can either be a constant or change in every iteration. A brief study of the learning rate is presented in Sec. \ref{gamma}. 
+
+We can now set a pheudocode for the Gradient Descent algorithm as follows:
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+\textbf{Algorithm 3: Gradient Descent (GD).} The given to $\beta$ is used for the calculation of the gradient and the parameters $\beta$ into a loop of iterations.
+
+\noindent\rule{16.6cm}{0.4pt}
+
+initialize $\boldsymbol{\beta}$
+
+\textbf{for} k \textbf{in} range(iterations):
+
+\hspace{0.5cm} $\boldsymbol{g_k^T}=\frac{n}{2}\cdot\boldsymbol{X^T}\cdot(\boldsymbol{X\cdot\beta_k}-\textbf{y})
+
+\hspace{0.5cm} $\boldsymbol{\beta_k_+_1}= \boldsymbol{\beta_k} - \gamma_k\cdot \boldsymbol{g_k^T}$
+{}    
+\newline
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+\newline
+
+However, it is more relevant to mention here some of the restrictions that exist in choosing it. One can actually show that the optimum value of $\gamma_k$ needs to be lower than $\frac{2}{\lambda_m_a_x}$, where $\lambda_m_a_x$ is the largest eigenvalue of the Hessian matrix. A $\gamma_k$ much lower than this value is computationally expensive, since then a large number of iterations is needed to reach the minimum (Fig.\ref{gamma} \textbf{A}). Yet, if the value of $\gamma_k$ is higher that the optimum value, the solution can either oscillate around the minimum (Fig.\ref{gamma} \textbf{C}) or even diverge (Fig.\ref{gamma} \textbf{D}). In practice, $\gamma_k$ is usually set to change with each iteration, according to a learning schedule. More about the $\gamma_k$ schedulers in Sec. \ref{gamma_scedule}. 
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.5\textwidth]{Screenshot from 2023-04-30 16-10-39.png}
+        \textbf{\caption{\centering{The effects of different values of the learning rate ($\eta$ on the graph) on solution convergence, borrowed from \cite{Mehta_2019}.}}
+    \label{fig:gamma}}
+\end{figure}
+
+\subsubsection{The Stochastic Gradient Descent (SGD)}%%%%%%%%%%%%%
+
+It is clear that the GD method is sensitive to both the initial value of $\beta_k$ (if the initial guess is not good, we might get trapped into a \textit{local} minimum) and the values of the learning rate. A way to overpass these dependencies it to introduce randomness into the algorithm; this can be achieved by using Stochastic Gradient Descent to calculate $\boldsymbol{\beta}$. 
+
+In this method, the dataset is divided into smaller subsets, called \textit{minibatches}. The gradient is calculated exactly as in GD within each minibatch. Each gradient approximation calculated for each minibatch is used to update the parameter $\beta$ of the next minibatch. A full iteration over all of the minibatches is called an \textit{epoch}. A pheudocode for the SGD algorithm can be written as:
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+\textbf{Algorithm 4: Stochastic Gradient Descent (SGD).} The dataset of size n, is divided into M, almost equally-sized, minibatches of size $m=\frac{n}{M}$. The gradient and $\beta$ are calculated for each minibatch and are used as initial values for the first minibatch of the next epoch. 
+
+\noindent\rule{16.6cm}{0.4pt}
+
+initialize $\boldsymbol{\beta_{k, i}}$
+
+\textbf{for} k \textbf{in} range(epochs):
+
+\hspace{0.5cm}\textbf{for} i \textbf{in} range (m):
+
+\hspace{1cm} $\boldsymbol{g_i^T}=\frac{n}{2}\cdot\boldsymbol{X^T}\cdot(\boldsymbol{X\cdot\beta_{k, i}}-\textbf{y})$
+
+\hspace{1cm} $\boldsymbol{\beta_{k, i+1}}= \boldsymbol{\beta_{k, i}} - \gamma_k\cdot \boldsymbol{g_i^T}$
+ 
+\hspace{0.5cm}   \textbf{end loop}
+
+\hspace{0.5cm} $\boldsymbol{\beta_{k+1, i}}= \boldsymbol{\beta_{k, m}}
+
+\textbf{end loop}
+
+$\boldsymbol{\beta}= \boldsymbol{\beta_{last\_epoch, m}}$
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+\newline
+{}
+The size of the mini-batches is a hyperparameter but it is not very common to cross-validate or bootstrap it. It is usually based on memory constraints (if any), or set to some value, e.g. 32, 64 or 128. We use powers of 2 in practice because many vectorized operation implementations work faster when their inputs are sized in powers of 2 (\href{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapteroptimization.html#stochastic-gradient-descent-sgd}{Hjorth-Jensen}).
+
+By distributing the datapoints into the minibatches randomly, we introduce stochasticity into the Gradient Descent algorithm. Thus, the chance of getting trapped in isolated local minima while fitting the algorithm, decreases. Also, calculations are significantly been sped-up since the gradients are being calculated, using smaller datasets (the minibatches) during each epoch.
+
+\subsubsection{Adding momentum}\label{momentum}
+
+Adding “momentum” (or inertia) to the GD or SGD serves as a memory of the direction we are moving in the parameter space. This can be implemented in the gradient calculation as follows: 
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\textbf{Algorithm 6: Adding momentum.} A momentum factor, $\delta| 0\leq\delta\leq1$ is being multiplied to the difference (change) $\Delta\boldsymbol{\beta_{k-1}}=\boldsymbol{\beta_k-\beta_{k-1}}$. This product is added to the previous gradient term, in order to calculate the new difference $\Delta\boldsymbol{\beta_{k}}=\boldsymbol{\beta_{k+1}-\beta_{k}}$.
+
+\noindent\rule{16.6cm}{0.4pt}
+
+\textbf{for} k \textbf{in} range(iterations):
+
+\hspace{0.5cm}$\Delta\boldsymbol{\beta_k}=\delta\cdot \Delta\boldsymbol{\beta_{k-1}}+\gamma_k\cdot \boldsymbol{g_k^T}$
+
+\hspace{0.5cm} $\boldsymbol{\beta_{k+1}}=\boldsymbol{\beta_k}-\Delta\boldsymbol{\beta_k}$
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+Obviously, for $\delta=0$ we are back into the (Stochastic) Gradient case.
+
+Adding momentum to the Gradient Descent method helps the algorithm gain speed in directions with persistent but small gradients, even in the presence of stochasticity, while suppressing oscillations in high-curvature directions. This comes in handy when the surface of the MSE is shallow and flat in some directions and narrow and steep in others (\cite{Mehta_2019}). 
+
+\subsection{Tuning the learning rate, $\gamma$}\label{gamma}
+
+As we discussed above, coming up with a learning rate is a way to circumvent the computation of the Hessian matrix, \textit{\textbf{H}}. There are many recipes for tuning the learning rate for (Stochastic) Gradient Descent. Keeping it constant and running the entire algorithm for different values of $\gamma$ is a very common brute-force way of picking up a good value for it. But there also exist some more complicated recipes, from simply setting it to adapt linearly or exponentially, according to the number of iterations to tracking not only the gradient,
+but also the second moment of the gradient. Some of the most popular techniques are outlined in the sections that follow.
+
+\subsubsection{The Linear and exponential scedulers}\label{gamma_scedule}
+
+One of the simplest methods for adapting the learning rate with the number of iterations, is choosing a linear dependency as follows:
+
+\begin{equation}
+    \gamma_k= (1-\alpha)\gamma_0+\alpha \gamma_t,
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item $\alpha=\frac{k}{t}$, k being the number of iterations and t a constant-to-tune.
+    \item $\gamma_t$ is a constant, proportional to $\frac{\gamma_0}{100}$
+\end{itemize}
+
+The learning rate could also change inversely proportionally to the number of iterations as:
+
+\begin{equation}
+    \gamma_k=\frac{\gamma_0}{1+k\cdot \gamma_t}
+\end{equation}
+
+Another popular solution is the learning rate decaying exponentially with the number of iterations as can be seen below:
+
+\begin{equation}\label{exponential gamma}
+    \gamma_k=\gamma_0\cdot e^{-k\gamma_t}
+\end{equation}
+
+The best scheduler for the learning rate can be decided ad hoc. There is no way to determine a priori whether one technique is going to perform better that another, unless it gets applied  to the algorithm. For example, as the reader will see in the Sec.\ref{plainsgd}, I used an exponentially varying learning rate in plain SGD, as the linear and inversely proportional one were performing very poorly no matter the efforts for tuning their hyperparameters t and $\gamma_0$.
+
+The next set of tuning techniques is, however, very interesting. By tracking the second moment of the gradient, these \textit{adaptive} methods create a faster momentum towards convergence. It is exciting to see in Secs. \ref{adasgd}-\ref{adamsgd} later on the way all three of these methods affect the SGD algorithm.
+
+\subsubsection{The Adaptive Gradient Algorithm (AdaGrad) \cite{adagrad}}\label{adagrad1}
+{}
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\textbf{Algorithm 7: AdaGrad.} The update of $\beta$ is calculated in terms of an adaptive learning rate with values that change in each iteration(/epoch  for SGD).
+
+\textbf{Requirements:}
+\begin{itemize}
+    \item an initial learning rate, $\gamma_0$.
+    \item an initial guess for the coefficients, $\beta_0$.
+    \item a small constant, $\epsilon\propto 10^{-8}$, in order to avoid divisions by zero. 
+\end{itemize}
+
+\noindent\rule{16.6cm}{0.4pt}
+
+\textbf{for} k \textbf{in} range (iterations)
+
+\hspace{0.5cm}(SGD sample minibatches + epochs)
+
+\hspace{0.5cm}compute gradient, g
+
+\hspace{0.5cm}compute the accumulated square gradient: 
+
+\hspace{0.5cm}$r_{i+1}= r_i + g\odot g$, where $\odot$ (is the Hadamard product)
+
+\hspace{0.5cm}compute $\frac{\gamma_0}{\delta+\sqrt{r_{i+1}}}\cdot g$
+
+\hspace{0.5cm} update:
+
+\hspace{0.5cm}$\beta_{i+1}= \beta_i- \frac{\gamma_0}{\delta+\sqrt{r_{i+1}}}\cdot g$
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\subsubsection{The Root Mean Square propagation (RMS-prop)\cite{rmsprop}}
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\textbf{Algorithm 8: RMS-prop.} The learning rate is reduced in directions where the norm of the gradient is consistently large. This greatly speeds up the convergence by allowing us to use a larger learning rate for flat directions (\href{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapteroptimization.html#including-stochastic-gradient-descent-with-autograd}{Hjorth-Jensen}).
+
+\textbf{Requirements:}
+\begin{itemize}
+    \item a global learning rate, $\gamma \propto 10^{-3}$.
+    \item a decay rate, $\rho\propto 0.9$, controlling controls the averaging time of the second moment.
+    \item an initial guess for the coefficients, $\beta_0$.
+    \item a small $\epsilon\propto 10^{-8}$ constant for numerical stability.
+    \item an initial value for the accumulate sq. gradient: r=0.
+\end{itemize}
+
+\noindent\rule{16.6cm}{0.4pt}
+
+\textbf{for} k \textbf{in} range (iterations)
+
+\hspace{0.5cm}(SGD sample minibatches + epochs)
+
+\hspace{0.5cm}compute gradient, g
+
+\hspace{0.5cm}compute the accumulated square gradient: 
+
+\hspace{0.5cm}$r_{i+1}= \rho\cdot r_i + (1-\rho)\cdot g\odot g$
+
+\hspace{0.5cm}compute the parameter:
+
+\hspace{0.5cm} $\Delta\beta=-\frac{\gamma}{\delta+\sqrt{r_{i+1}}}\odot g$
+
+\hspace{0.5cm} update:
+
+\hspace{0.5cm}$\beta_{i+1}= \beta_i+\Delta\beta$
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\subsubsection{The ADAptive Moment estimation (ADAM) \cite{adam}}
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\textbf{Algorithm 9: ADAM.} A running average of both the first and second moment of the gradient is kept and used to adaptively change the learning rate for different parameters. An additional bias correction is also performed to account for the fact that the first two moments of the gradient are estimated using a running average
+(\href{https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/chapteroptimization.html#including-stochastic-gradient-descent-with-autograd}{Hjorth-Jensen}).
+
+\textbf{Requirements:}
+\begin{itemize}
+    \item an initial learning rate, $\gamma_0 \propto 10^{-3}$.
+    \item 2 decay rates, $\rho_1\propto 0.9, \rho_2\propto 0.999$.
+    \item an initial guess for the coefficients, $\beta_0$.
+    \item a small $\epsilon\propto 10^{-8}$ constant for numerical stability.
+    \item an initial value for the accumulate sq. gradients: s, r=0.
+    \item an initial value for the timestep counter: t=0.
+\end{itemize}
+
+\noindent\rule{16.6cm}{0.4pt}
+
+\textbf{for} k \textbf{in} range (iterations)
+
+\hspace{0.5cm}(SGD sample minibatches + epochs)
+
+\hspace{0.5cm}compute gradient, g
+
+\hspace{0.5cm} $t\leftarrow{t+1}$ update timestep
+
+\hspace{0.5cm}update the first momentum:
+
+\hspace{0.5cm}$s_{i+1}=\rho_1\cdot s_i + (1-\rho_1)\cdot g$ 
+
+\hspace{0.5cm}update the second momentum:
+
+\hspace{0.5cm}$r_{i+1}=\rho_2\cdot r_i + (1-\rho_2)\cdot g\odot g$ 
+
+\hspace{0.5cm}correct bias in the 1st momentum:
+
+\hspace{0.5cm}$s_{i+1}=\frac{s_i}{1-\rho_1^t}$
+
+\hspace{0.5cm}correct bias in the 2nd momentum:
+
+\hspace{0.5cm}$r_{i+1}=\frac{r_i}{1-\rho_2^t}$
+
+\hspace{0.5cm}compute the update:
+
+\hspace{0.5cm} $\Delta\beta=-\frac{\gamma_0\cdot s}{\delta+\sqrt{r_{i+1}}}$
+
+\hspace{0.5cm} update:
+
+\hspace{0.5cm}$\beta_{i+1}= \beta_i+\Delta\beta$
+{}
+\newline
+
+\hrule width \hsize \kern 0.5mm \hrule width \hsize \kern 1mm 
+
+\subsection{Results}\label{opt2}
+It is now time to try applying the techniques mentioned above to the dataset in question. Adding momentum to both GD and SGD, coupling these two techniques with various learning rate scedulers and applying everything to both OLS and Ridge regression, resulted in 24 methods overall. The fitting behaviour of each one of them can be studied in the sections that follow.  
+
+\subsubsection{Plain Gradient Descent for OLS and Ridge}\label{finalresults}
+
+Starting simple, I added a GD algorithm to the OLS and Ridge regression with and without momentum. 
+The learning rate was kept constant but was varied in the range $[\frac{1}{\lambda_{max}}, 0.029]$, where $\lambda_{max}$ is the maximum eigenvalue of the Hessian matrix. 
+The hyperparameter $\lambda$ of Ridge regression (not to be confused with the eigenvalues of the Hessian matrix, also denoted by $\lambda$) was varied in the range $[10^{-4}, 1]$. For larger values of $\lambda$, calculations overflowed, while for lower ones the case was thought to be too similar to OLS. 
+
+\textbf{OLS regression: comparison with the theoretical solution}
+
+The model I am trying to fit to the dataset, being a 6th degree polynomial, is fairly simple. Therefore it would be interesting to calculate, at least once, the predicted values of \textbf{y}, using the theoretical solution, that is the inversion the Hessian matrix. 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{GD/1.gd_ols_mse.png}
+         \caption{MSE calculated for both GD OLS and analytically.}
+         \label{fig:mse_ols_gd}
+
+    \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{GD/1.gd_ols_y.png}
+         \caption{The resulting model for both GD OLS and Hessian matrix inversion.}
+         \label{fig:y_ols_gd}
+     \end{subfigure}
+        \caption{The application of GD to OLS.}
+        \label{fig:ols_gd}
+\end{figure}
+
+Because the hyperparameter, $\gamma$ is used, as we discussed previously, to avoid the computation of the inverse of \textbf{\textit{H}}, the analytical solution does not include this hyperparameter at all. Therefore, the MSE is independent of $\gamma$, hence its shooting directly to its minimum value in Fig.\ref{fig:mse_ols_gd}. Calculating the MSE using plain GD, though, involves $\gamma$ which, as described above, was varied within a grid of values but kept constant during each loop of calculations. From Fig.\ref{fig:mse_ols_gd} the MSE decreases with an increasing $\gamma$. However, after a certain value of $\gamma$ (approx. 0.022) the MSE stabilizes. For the optimal \textbf{y} of the model, its last value ($\gamma=0.029$) was used. For values greater than that the calculations overflow. 
+
+Judging from Fig. (\ref{fig:y_ols_gd}), the simple choice of using plain GD in OLS for a fixed learning rate approaches the data rather well, having a MSE of the order of $10^{-6}$. 
+
+\textbf{Ridge regression: comparison with the OLS regression}
+
+Although computationally more efficient than the OLS case ($2.575\cdot 10^{-5}$ s vs $3.0756\cdot 10^{-5}$ s) and inspite the fact that less iterations are required ($10^{5}$ for Ridge vs $10^{6}$ for OLS), the extra loop for the Ridge parameter, $\lambda$, adds a lot to the overall computational cost, since an investigation of that value has to be made always. Additionally, the application of GD to Ridge regression is slightly less reliable. The slight curvature at 90$^{\circ}$ is not ideal, the North Pole, being the main area of interest for studying Arctic Amplification, caused by meridional heat transport. However, this does not appear in every run (due to the randomness of the noise in the dataset) and the rest of the data are being approached rather good. 
+
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.5\textwidth]{GD/2_gd_ridge_y.png}
+        \textbf{\caption{\centering{The final model from Ridge regression, fit to the dataset, compared with the OLS solution.}}
+    \label{fig:gd_ridge_y}}
+\end{figure}
+
+Studying the MSE of this method is rather interesting. Because it depends now on both the Ridge parameter, $\lambda$, and the hyperparameter, $\gamma$, the results need to be presented in a table form. Scikit-learn's package \textit{seaborn} is rather useful for cases like this. The color code used in this package enables us to see the dependency of MSE on both parameters very easily. Thus, it is pretty obvious that MSE increases with increasing values of $\lambda$ but decreases as $\gamma$ increases, until it reaches a plateau, similar to the one in the OLS case (Fig.\ref{fig:mse_ols_gd}), where it remains stable for increasing $\gamma$. In order to avoid extensive computation time, a “safety band” of $\lambda$ and $\gamma$ can be picked up from this table, in order to narrow down the investigation area. 
 
 
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.78\textwidth]{GD/2gd_ridge_mse.png}
+        \textbf{\caption{\centering{The MSE for GD in Ridge regression, calculated for every combination of $\gamma$ and $\lambda$. Again, a lot of care should be taken when studying this figure: the numbers on \textit{both} axes denote the \textit{numbering} of the parameters, 0 standing for the first parameter and so on. So, for example, the 0th value of $\gamma$ is $\frac{1}{\lambda_{max}}$ and the 9nth one is 0.029.}}
+    \label{fig:gd_ridge_mse}}
+\end{figure}
 
-\section{Future work}
+\subsubsection{Gradient Descent with momentum (GD-m) for OLS and Ridge.}
 
-The climate system at the moment is slightly off equilibrium (what's coming in doesn't come out). 
+The spectrum for the hyperparameter $\gamma$ is now $[\frac{1}{\lambda_{max}}, 0.03]$, while for the Ridge parameter, $\lambda$, it is $[10^{-5}, 1]$.
 
-eqn 1 doens't stand if we're not in equilibrium..because it comes from dT/dt, so if this is not zero, then you can't equate the 2 parts.  
+Oddly enough, adding momentum to the Gradient descent proved computationally more expensive for both OLS ($6.438\cdot10^{-5}$ s vs $3.076\cdot10^{-5}$ s) and Ridge Regression ($2.838\cdot10^{-5}$ s vs $2.575\cdot10^{-5}$ s). Yet, as can be seen from both Fig. \ref{msegdm} and Fig. \ref{rgdsme} the MSE of the model is lower than in the plain GD case, although it varied with $\gamma$ and $\lambda$ exactly as before. 
 
-Stone's eqn 1 is annually averaged. But it'd be interesting to see what's the h.f. structure for a seasonally varying climate. 
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.5\textwidth]{GD/3.gd_m_ols_mse.png}
+        \textbf{\caption{\centering{The MSE of GD-m, for OLS regression against the $\gamma$ hyperparameter.}\label{msegdm}}
+    \label{fig:}}
+\end{figure}
 
-!Do the same analysis for actually h.f. data, like the ERA5. Also compare with NORESM simulations: how does it behave at 2xCO2, 4xCO2...
-
-Performing a polynomial fit to Stone's eq. [\ref{4}] was not necessary; we could have applied it directly to an actual dataset. Yet, we used this approach as an excuse to investigate some of the currently most popular machine learning and ptimization techniques. Therefore, the aim of this project, was not the modelling itself, but settling up a method to define the polynomial degree and its coefficients, among the plethora of the ones available right now. 
-
-Having settled on the Ridge regression for finding the polynomial degree and the plain GD in OLS regression to find the coefficients, I can now perform a polynomial fit to an actual dataset, probably ERA5, NORESM and conclude on an expression for the meridional heat transport, perhaps even in both hemispheres.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.8\textwidth]{GD/32gd_m_ridge_mse.png}
+        \textbf{\caption{\centering{The MSE for GD-m in Ridge regression, calculated for every combination of $\gamma$ and $\lambda$. Again, a lot of care should be taken when studying this figure: the numbers on \textit{both} axes denote the \textit{numbering} of the parameters, 0 standing for the first parameter and so on. So, for example, the 0th value of $\gamma$ is $\frac{1}{\lambda_{max}}$ and the 9nth one is 0.03.}\label{rgdsme}}
+    \label{fig:}}
+\end{figure}
 
 
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.5\textwidth]{GD/33gd_m_ridge_y.png}
+        \textbf{\caption{\centering{The model for GD-m on OLS and Ridge regression, fit to the dataset.}}
+    \label{fig:}}
+\end{figure}
+
+\subsubsection{Plain Stochastic Gradient Descent (SGD) for OLS and Ridge}\label{plainsgd}
+
+This time, an exponential scheduler was used for tuning the hyperparameter, $\gamma$, following the relationship \boldsymbol{\ref{exponential gamma}} with k= number of epochs and $\gamma_0=0.005$.
+
+The number of minibatches varied in the powers of 2, in order to accelerate the calculations. 
+
+Although a large number of epochs ($10^{6}$ for OLS and $10^{5}$ for Ridge regression) is needed during these runs, raising it even further has almost no contribution on the quality of the model. A good result (MSE= $7.156\cdot10^{-6}$) can be attained from the OLS case, but SGD doesn't perform very well in Ridge regression, raising the order of magnitude of the MSE up to $10^{-3}$.
+
+The best results (the ones with the minimum MSE) are presented in Fig.\ref{fig:sgd}. As we can see, SGD can potentially work well on OLS regression but this is definitely not the case for Ridge regression.
+
+Studying how the curve changes with the number of minibatches used (see App. \ref{minibatches} for the OLS case), one can see that it is a definitive factor for the results. In this case, we get the best results for 1 minibatch which is essentially the GD case. 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/minibatches study/1.png}
+         \caption{The model calculated with SGD for OLS regression,  using M=1 minibatches.}
+         \label{fig:sgd_ols}
+    \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/minibatches study/1r.png}
+         \caption{The model calculated with SGD for Ridge regression, using M=1 minibatches.}
+         \label{fig:sgd_ridge}
+     \end{subfigure}
+        \caption{The model calculated with SGD for OLS, using M=1 minibatches.}
+        \label{fig:sgd}
+\end{figure}
+
+\subsubsection{Stochastic Gradient Descent with momentum (SGD-m) for OLS and Ridge}
+
+Varying the hyperparameters $\gamma$ and $\lambda$ exactly as in the case of plain SGD and also trying different values for the minibatches but always in powers of two, I added momentum to the SGD algorithm of the OLS and Ridge regression. Both efforts proved unsuccessful as the MSE is inevitably high, reaching up to $1.126\cdot10^{-5}$ in OLS case (1 order of magnitude higher than before) and again up to $10^{-3}$ in Ridge regression. 
+
+The number of minibatches is here also an important factor for the quality of the model. This time, however, we get the best results for M=16 and these are plotted in Figs. \ref{fig:sgdm}.
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/sgd_m_ols_m16.png}
+         \caption{The model calculated with SGD-m for OLS regression,  using M=16 minibatches.}
+         \label{fig:sgd_ols}
+    \end{subfigure}
+     \hfill
+     \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/sgd_m_ridge_m16.png}
+         \caption{The model calculated with SGD for Ridge regression, using M=1 minibatches.}
+         \label{fig:sgd_ridge}
+     \end{subfigure}
+        \caption{The model calculated with SGD-m for OLS, using M=16 minibatches.}
+        \label{fig:sgdm}
+\end{figure}
+
+Overall, applying SGD to OLS and Ridge regression either with or without momentum led to very unsuccessful results. But there are still have a few more options to try out! In the following sections the 3 adaptive methods for tuning the learning rate that we discussed earlier (Sec.\ref{adagrad1}) are being applied to SGD with and without momentum, in an effort to upgrade the model's accuracy. 
+
+The AdaGrad method, in particular, was also applied to plain GD and momentum GD, for curiosity's sake. However, because GD performed rather well from the beginning and hence has no need for improvement, this investigation is laid out in Appendix \ref{adagd234}.
+
+\subsubsection{Adagrad Stochastic Gradient Descent with and without momentum for OLS and Ridge}\label{adasgd}
+
+Can the AdaGrad method improve the results for SGD on OLS and Ridge Regression?
+
+Varying the initial value of $\gamma$ in the range $[10^{-3}, 0.1]$ and $\lambda$ in the range $[10^{-5}, 0.1]$, we get the best results for M=1 minibatches, falling again into the category of GD. Yet this time, adjusting the learning rate after every iteration according to the AdaGrad algorithm yields much better results than before (Figs.\ref{fig:ada2}). 
+
+\begin{figure}[h!]
+    \centering
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{Adagrad_SGD/adagrad_sgd.png}
+        \textbf{\caption{\centering{The model for SGD in OLS and Ridge regression, using the AdaGrad method to tune the learning rate, $\gamma$.}}
+    \label{fig:adasgd}}
+     \end{subfigure}
+\hfill
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]
+        {Adagrad_SGD/adagrad_sgd_m.png}
+        \textbf{\caption{\centering{The model for SGD-m in OLS and Ridge regression, using the AdaGrad method to tune the learning rate, $\gamma$.}}
+    \label{fig:adasgdm}}
+    \end{subfigure}
+            \caption{Adagrad for tuning the learning rate, $\gamma$ in SGD, SGD-m.}
+        \label{fig:ada2}
+\end{figure}
+
+In both SGD and SGD-m cases, there is a slight overestimation at the North Pole and an underestimation of the data around the curve's maximum (35$^\circ$- 40$^\circ$), so AdaGrad might not be the best option for fitting the present dataset. The effect of the method on the quality of the curve is, however, very impressive and it would be very interesting to see if it can be better improved using the rest of the adaptive techniques for tuning the learning rate.
+
+\subsubsection{RMS-prop on SGD with and without momentum}
+
+Varying the hyperparameters $\gamma$ and $\lambda$ exactly as in the AdaGrad case, we get good enough results for both M=1 and M=2 minibatches (Figs. \ref{fig:rms_sgd}) for the plain SGD case. Although there is still some underestimation around 35$^\circ$- 40$^\circ$, the OLS case performs very well at the North Pole. Ridge regression, however can either underestimate (Fig. \ref{fig:rms_sgd_m1}) or overestimate (Fig. \ref{fig:rms_sgd_m1}) the meridional heat transport at this region. 
+
+\begin{figure}[h!]
+    \centering
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{RMS/rms_sgd_m1.png}
+        \textbf{\caption{\centering{M=1 minibatch.}}
+    \label{fig:rms_sgd_m1}}
+     \end{subfigure}
+\hfill
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]
+        {RMS/rms_sgd_m2.png}
+        \textbf{\caption{\centering{M=2 minibatches.}}
+    \label{fig:rms_sgd_m2}}
+    \end{subfigure}
+            \caption{The model for RMS-prop for SGD on OLS and Ridge regression. Note that the Ridge regression resluts are in both plots compared to the OLS solution for M=1 minibatch.}
+        \label{fig:rms_sgd}
+\end{figure}
+
+Adding momentum to the SGD algorithm enables us to work with a larger number of minibatches. From Figs.\ref{fig:rms_sgd_m3456kdfgh} one can see that we get the best results for Ridge regression for M=4 minibatches, at least close to the North Pole. 
+
+In all three cases the Ridge regression results are compared to the OLS ones for M=1. Although this was the case with the minimum MSE, we can clearly see that it underestimated the maximum values of f and does not give a good prediction for its values close to the North Pole. 
+
+This time it is Ridge regression that performs better but only in comparison to OLS, since the underestimation at the curve's maximum is still apparent. 
+
+\begin{figure}[h]
+    \centering
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{RMS/rms_sgd_m_m1.png}
+        \textbf{\caption{\centering{M=1 minibatch.}}
+    \label{fig:rms_sgd_m_m1}}
+     \end{subfigure}
+\hspace{1cm}
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]
+        {RMS/rms_sgd_m_m2.png}
+        \textbf{\caption{\centering{M=2 minibatches.}}
+    \label{fig:rms_sgd_m_m2}}
+    \end{subfigure}
+    \end{figure}
+
+\begin{figure}[ht]\ContinuedFloat
+    \centering
+    \centering
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{RMS/rms_sgd_m_m4.png}
+        \textbf{\caption{\centering{M=4 minibatches.}}
+    \label{fig:rms_sgd_m_m2}}
+     \end{subfigure}
+\caption{The model for RMS-prop for SGD-m on OLS and Ridge regression. Only the case of M=1 minibatch is being plotted for the OLS regression in all 3 plots.}   
+        \label{fig:rms_sgd_m3456kdfgh}         
+\end{figure}  
+
+\subsubsection{ADAM on SGD with and without momentum}\label{adamsgd}
+
+The ADAM method is now applied to plain SGD for OLS and Ridge regression, varying the hyperparameters in the same ranges as before. 
+
+In Figs.\ref{fig:rms_sgd_msaerdgfhjm}, the OLS case for 2 minibatches is plotted against the Ridge regression case for M=1, 2 and 4 minibatches. As can be seen, the OLS case fits the dataset better that the Ridge regression, the latter still underestimating the heat flux values in the maximum of the curve and overestimating its values at the North Pole. Yet, for M=4 minibatches this overestimation if far less prominent than it is for M=1, 2. 
+
+\begin{figure}[h!]
+    \centering
+         \begin{subfigure}[h]{0.42\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{ADAM/adam_sgd_m1.png}
+        \textbf{\caption{\centering{M=1 minibatch.}}
+    \label{fig:rms_sgd_m_m1}}
+     \end{subfigure}
+\hfill
+         \begin{subfigure}[h]{0.42\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{ADAM/adam_sgd_m2.png}
+        \textbf{\caption{\centering{M=2 minibatches.}}
+    \label{fig:rms_sgd_m_m2}}
+    \end{subfigure}
+    \hfill
+         \begin{subfigure}[h]{0.42\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{ADAM/adam_sgd_m4.png}
+        \textbf{\caption{\centering{M=4 minibatches.}}
+    \label{fig:rms_sgd_m_m2}}
+    \end{subfigure}
+            \caption{The model for ADAM for SGD on OLS and Ridge regression.}
+        \label{fig:rms_sgd_msaerdgfhjm}
+\end{figure}
+
+Applying the same tuning method to momentum SGD favours Ridge regression just as RMS-prop on SGD-m did. Studying Figs.\ref{fig:rms_sgd_msdfgda45} one can see that the Ridge regression model fits the dataset very well for both M=1 and M=2 minibatches. Unlike the OLS case, it does not underestimate the heat flux values in the maximum of the curve and it fits the North Pole area rather well. The only case where it doesn't perform as well is for M=4 minibatches, where both regression methods underestimate the \textit{f}-values around 35$^\circ$- 40$^\circ$ but the OLS regression approaches the North Pole area much better than the Ridge regression model.
+
+\begin{figure}[h!]
+    \centering
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{ADAM/adam_sgd_m_m1.png}
+        \textbf{\caption{\centering{M=1 minibatch.}}
+    \label{fig:rms_sgd_m_m1}}
+     \end{subfigure}
+\hfill
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{ADAM/adam_sgd_m_m2.png}
+        \textbf{\caption{\centering{M=2 minibatches.}}
+    \label{fig:rms_sgd_m_m2}}
+    \end{subfigure}
+    \hfill
+         \begin{subfigure}[h]{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{ADAM/adam_sgd_m_m4.png}
+        \textbf{\caption{\centering{M=4 minibatches.}}
+    \label{fig:rms_sgd_m_m2}}
+    \end{subfigure}
+            \caption{The model for ADAM for SGD-m on OLS and Ridge regression.}
+        \label{fig:rms_sgd_msdfgda45}
+\end{figure}
+
+\newline 
+\section{Discussion - conclusions
+}\label{results}
+
+A polynomial fit was performed on a dataset, extracted from Stone's equation \boldsymbol{\ref{4}} for calculating the meridional heat transport. In order to define the polynomial degree, both Ordinary Least Squares (OLS) and Ridge regression were applied to the dataset, along with bootstrap and Cross-Validation (CV) resampling. Although the OLS regression could provide a minimum value for the polynomial degree, Ridge regression made it clear that for \textbf{pol. degree = 6} we get the lowest value of the Mean Squared Error (MSE). 
+
+In order to optimize the polynomial coefficients, 24 optimization techniques were performed on the dataset. Both Gradient Descent (GD) and Stochastic Gradient Descent (SGD) were tried out for OLS and Ridge Regression. The case of adding momentum to these algorithms was also investigated, along with 5 ways of tuning the learning rate. Table \ref{fig:table} provides an outline of all of the combinations of these techniques that were applied, along with the value of the MSE and the execution time they need.
+
+\begin{table}[h!]
+    \centering
+        \includegraphics[width=0.5\textwidth]{344504903_907278446996341_7703479511258394710_n.png}
+        \textbf{\caption{\centering{The 24 optimization methods applied to the dataset, along with the calculated MSE and the execution time. Note that both of these values change after each run, due to the added noise. Yet the order of magnitude remains the same.}}
+    \label{fig:table}}
+\end{table}
+
+Because inverting the Hessian matrix proved to be a computationally light calculation for this application, the theoretical OLS solution would be the first method to try is a future data analysis. In this case, the polynomial that approaches the dataset has the following expression (see the running on my \href{https://github.com/ChristinaKappatou/CompSci_Project/blob/main/Project1/final%20polynomial.ipynb}{GitHub page}):
+\newpage
+
+$y= \boldsymbol{2.28959173\cdot 10^{-5}}+ \boldsymbol{1.59190196\cdot 10^{-1}}\cdot x+\boldsymbol{ 1.00758533\cdot 10^{-1}}\cdot x^2 \boldsymbol{-2.21102042\cdot 10^{-1}}\cdot x^3+ $
+
+\begin{equation}
+\hspace{-4cm}+\boldsymbol{4.46013345\cdot 10^{-2}}\cdot x^4+ \boldsymbol{7.13140276\cdot 10^{-2}}\cdot x^5 \boldsymbol{-2.47365356\cdot 10^{-2}}\cdot x^6,
+\end{equation}
+
+where y is the heat flux, \textit{f} and $x=sin(\phi)$ is the latitude. 
+
+The next best option would be, again, the simplest one, that is \textbf{GD for OLS} with a constant hyperparameter, $\gamma$. The latter was the only hyperparameter to tune and after settling on its optimal value, there is no need for an extra loop of investigation, so the code runs relatively fast (the reader can try in the same part of my \href{https://github.com/ChristinaKappatou/CompSci_Project/blob/main/Project1/final%20polynomial.ipynb}{GitHub page}). Being so close in concept to the theoretical solution (the Hessian matrix basically gets replaced by a constant value, $\gamma$) it yields an extremely good fit (MSE of the order of $10^{-6}$), inspite its simplicity. The resulting polynomial follows the expression:
+
+$y= \boldsymbol{-0.00046354}+ \boldsymbol{ 0.16718365}\cdot x\boldsymbol{ -0.02067232}}\cdot x^2 \boldsymbol{-0.1772271 }\cdot x^3+$
+
+\begin{equation}
+\hspace{-6.5cm}+\boldsymbol{0.02146752}\cdot x^4+ \boldsymbol{0.07208737}\cdot x^5 \boldsymbol{-0.02290923}\cdot x^6,
+\end{equation}
+
+with y being again the heat flux, \textit{f} and $x=sin(\phi)$ the latitude. 
 
 
+\section{Future work}\label{future}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Transforming Stone's eq.\boldsymbol{\ref{4}} into a dataset-to-fit was not a necessary step to study the meridional heat transport. His equation, describing it, has been there from the beginning! Modelling this function with a polynomial fit was just an excuse to study some of the most popular optimization methods out there. 
 
+Bringing my current research interests into this project took approximately 1 month, so when I was finally ready to proceed I had to move fast. Because of all the interesting questions that arise from studying real datasets, bringing them into this project was a time-wise investment I could not afford at the time. Thus I made up the dataset, described in Sec.\ref{intro2}.
 
+Yet now, knowing which tools are the best for studying this quantity, I can move to applying them to actual datasets, like the \href{https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-pressure-levels?tab=form}{ERA5}. Perfoming a new polynomial fit, using Ridge regression to assess its degree and GD on OLS regression to optimize its coefficients will be an interesting way to test the robustness of this research. And, this time, data from the Southern Hemisphere could also be used. Plus, Stone's equation, in fact describes, the \textit{annually averaged} meridional heat transport. Could we use these datasets to predict a \textit{seasonally varying} climate? Will the final model compare well with other climate simulations like in NorESM?
 
-
-
-
-
-
-
-
+Studying machine learning techniques has been a good start in understanding how to address those questions and how to deal with datasets in order to move towards answering them. 
 
 
 
 \newpage
+
+\begin{appendices}%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Singular Value decomposition for finding the polynomial coefficients, $\boldsymbol{\beta}$ in Ordinary Least Squares Regression}\label{svd1}
+
+We proved in Sec.\ref{ols} that the polynomial coefficients in OLS Regrassion are given by the expression:
+
+\begin{equation}\label{beta_proof}
+        \boldsymbol{\beta}=(\textbf{X}^T\cdot \textbf{X})^-^1  \cdot \textbf{X}^T \cdot \textbf{y} 
+\end{equation}
+
+, where \textbf{X} is the design matrix and \textbf{y} the initial datapoints. 
+
+Given that every matrix can be singular value- decomposed \cite{Sudipto}, we can give \textbf{X} the following expression:
+
+\begin{equation}\label{svd}
+    \textbf{X}=\boldsymbol{U\cdot\Sigma\cdotV^T},
+\end{equation}
+
+where:
+
+\begin{itemize}
+    \item \textbf{U} is an orthogonal matrix and therefore it holds that: $\boldsymbol{U^T\cdot U}=\boldsymbol{I}$
+    \item \textbf{V} is also an orthogonal matrix and so: $\boldsymbol{V^T\cdot V}=\boldsymbol{I}$.
+
+    We will also use the definition of an orthogonal matrix, that is: $\boldsymbol{V^T}=\boldsymbol{V^-^1}$
+
+    \item $\boldsymbol{\Sigma}$ is a diagonal matrix, containing the \textit{singular values} of \textbf{X}. 
+\end{itemize}
+
+Substituting $\boldsymbol{\ref{svd}}$ into $\boldsymbol{\ref{beta_proof}}$, we get:
+{}
+\newline
+
+$\boldsymbol{\beta}=\boldsymbol{(V\cdot \Sigma^T\cdot \Sigma\cdot (V^T)^-^1\cdot V\cdot \Sigma^T\cdot U^T}=$
+    
+$\hspace{3.3mm}= \boldsymbol{(V^T)^-^1\cdot \Sigma^-^1\cdot (\Sigma^T)^-^1\cdot V^-^1\cdot V\cdot \Sigma^T\cdot U^T}=$
+    
+$\hspace{3.3mm} =\boldsymbol{(V^T)^-^1\cdot \Sigma^-^1\cdot U^T}\Rightarrow$    
+\vspace{2mm}
+\begin{equation}
+\hspace{-12.5cm}   \Rightarrow \boldsymbol{\beta}= \boldsymbol{V\cdot \Sigma^-^1\cdot U^T}
+\end{equation}
+
+, given the orthogonal matrix properties stated above. 
+
+Now, in the above expression, \textbf{V} is known $\boldsymbol{\Sigma^-^1}$ is easily computed, since $\boldsymbol{\Sigma}$ is diagonal and $\boldsymbol{U^T}$ is also easy to calculate.
+
+Therefore, the coefficients, $\boldsymbol{\beta}$ of the polynomial can be calculated, avoiding any problems raised by potential singularities in the design matrix, \textbf{X}.
+
+\section{The score function, $R^2$ for the plain OLS case}\label{R2}%%%%%%%%%%%%%%%%
+
+The correlation (score) function is defined as follows (\cite{Devore}, Ch.12):
+
+\begin{equation}
+    R^2(\textbf{y}, \boldsymbol{\Tilde{y}})= 1- \frac{\sum_{i=0}^{n-1}(y_i-\Tilde{y_i})^2}{\sum_{i=0}^{n-1}(y_i-\Bar{y_i})^2},
+\end{equation}
+where $\Bar{y_i}=\frac{1}{n}\sum_{i=0}^{n-1}y_i$ is the mean value of \textbf{y}.
+
+Moving in exactly the same way as in Sec.\ref{mse_olss}, I varied the number of datapoints (n=200, 500 or 1000) and the size of the test dataset (25, 50 or 75\% of the original dataset).
+
+The results can be seen in Figs.\ref{fig:r2_200}- \ref{fig:r2_1000}. A high correlation (close to 1) is always achieved for polynomial degrees larger than 3, meaning that from that polynomial degree and on, the model can predict the data almost exactly. This conclusion matches with what we saw in Sec.\ref{mse_olss}, that the minimum difference between train and test MSE can be found for polynomial degrees larger than 3. 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_200_test_25.png}
+         \caption{n=200, test size = 25\%.}
+         \label{fig:ols_r2_200_25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_200_test_50.png}
+         \caption{n=200, test size = 50\%.}
+         \label{fig:ols_r2_200_50}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_200_test_75.png}
+         \caption{n=200, test size = 75\%.}
+         \label{fig:ols_r2_200_75}
+     \end{subfigure}
+        \caption{$R^2$ for for the plain OLS case with n=200 datapoints.}
+        \label{fig:r2_200}
+\end{figure}
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_500_test_25.png}
+         \caption{n=500, test size = 25\%.}
+         \label{fig:ols_r2_200_25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_500_test_50.png}
+         \caption{n=500, test size = 50\%.}
+         \label{fig:ols_r2_200_50}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_500_test_25.png}
+         \caption{n=500, test size = 75\%.}
+         \label{fig:ols_r2_200_75}
+     \end{subfigure}
+        \caption{$R^2$ for the plain OLS case with n=500 datapoints.}
+        \label{fig:r2_500}
+\end{figure}
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_1000_test_25.png}
+         \caption{n=1000, test size = 25\%.}
+         \label{fig:ols_r2_200_25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_1000_test_50.png}
+         \caption{n=1000, test size = 50\%.}
+         \label{fig:ols_r2_200_50}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{ml pictures ols/ols_r2_n_1000_test_75.png}
+         \caption{n=1000, test size = 75\%.}
+         \label{fig:ols_r2_200_75}
+     \end{subfigure}
+        \caption{$R^2$ for the plain OLS case with n=1000 datapoints.}
+        \label{fig:r2_1000}
+\end{figure}
+
+\section{Study of the model's dependency on the number of minibatches in SGD.}\label{minibatches}
+
+The number of minibatches is varied in the case of plain SGD on OLS regression (Sec.\ref{plainsgd}). As can be seen from Figs.\ref{fig:minibatches}, the number of minibatches has to be very low (we get the best fit for M=1 minibatch) in order for the model to perform well. Raising the number of minibatches leads to progressively worse fittings, even for $M>32$ (not shown here). So we see that in order for plain SGD to perform well on this dataset, it has to be as close to GD as possible (the case where M=1 considers the entire test dataset as a minibatch, so the algorithm goes through the entire test dataset as before). A high dependency of the result on the number of minibatces was observed through every coded SGD algorithm.
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h]{0.4\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/minibatches study/1.png}
+         \caption{M=1.}
+         \label{fig:ols_sgd_m1}
+     \end{subfigure}
+   \hspace{1cm}
+     \begin{subfigure}[h]{0.4\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/minibatches study/2.png}
+         \caption{M=2.}
+         \label{fig:ols_sgd_m2}
+     \end{subfigure}
+     \newline
+     \begin{subfigure}[h]{0.4\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/minibatches study/4.png}
+         \caption{M=4.}
+         \label{fig:ols_sgd_m4}
+     \end{subfigure}
+         \hspace{1cm}
+     \begin{subfigure}[h]{0.4\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{SGD/minibatches study/32.png}
+         \caption{M=32.}
+         \label{fig:ols_sgd_m32}
+     \end{subfigure}
+        \caption{The effect of the number of minibatches, M, on the quality of the model.}
+        \label{fig:minibatches}
+\end{figure}
+\newpage
+\section{Adagrad Gradient Descent with and without momentum for OLS and Ridge}\label{adagd234}
+
+Gradient Descent already performed very well using a constant learning rate. However, it is still interesting to see how it behaves with an adaptive learning method instead. The AdaGrad method is implemented on both GD and GD-m for OLS and Ridge regression. Although the learning rate now changes after every iteration, its initial value, $\gamma_0$, was varied again within the range $[\frac{1}{\lambda_{max}}, 0.03]$ to decide upon a good initialization. 
+
+Upon running the code (for \href{https://github.com/ChristinaKappatou/CompSci_Project/blob/main/Project1/5.%20AdaGrad%20Plain%20GD.ipynb}{plain GD} and \href{https://github.com/ChristinaKappatou/CompSci_Project/blob/main/Project1/6.%20AdaGrad%20GD-m.ipynb}{GD-m}), one can see that for both cases (with and without momentum), the results are very similar to the ones where the learning rate was constant in each iteration. The MSE behaves exactly the same as in the previous GD cases, being independent of $\gamma$ after a certain value for OLS; for Ridge regression it still gets raised for larger values of $\lambda$ and drops for larger values of $\gamma$.
+
+There is an excellent agreement between the OLS and Ridge regression curves, both being almost indistinguishable from each other (Fig.\ref{fig:adagd3456} and Fig.\ref{fig:adagdm2345}).
+
+It is important to note at this point, that although this method performs very well, it demands no less number of iterations ($10^6$ for OLS and $10^5$ for Ridge) than the case where the learning rate is kept constant. Lowering the number of iterations affects the results dramatically, unlike the number of epochs in SGD. However, since the MSE stabilizes after a vale of $\gamma_0$, we can run the same algorithm, dropping the investigation over the $\gamma_0$ initialization and setting it equal to, say 0.03 (the last value of its spectrum) from the start. The number of iterations will not change but at least there would be one less loop to go through and therefore the overall computational time would decrease.
+
+\clearpage
+
+\begin{figure}\vspace{-16cm}
+    \centering
+         \begin{subfigure}{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]{adagrad_GD/adagrad_gd.png}
+        \textbf{\caption{\centering{The model for GD in OLS and Ridge regression, using the AdaGrad method to tune the learning rate, $\gamma$.}}
+    \label{fig:adagd3456}}
+     \end{subfigure}
+\hspace{1cm}
+         \begin{subfigure}{0.45\textwidth}
+         \centering
+        \includegraphics[width=\textwidth]
+        {adagrad_GD/adagrad_gd_m.png}
+        \textbf{\caption{\centering{The model for GD-m in OLS and Ridge regression, using the AdaGrad method to tune the learning rate, $\gamma$.}}
+    \label{fig:adagdm2345}}
+    \end{subfigure}
+            \caption{Adagrad for tuning the learning rate, $\gamma$ in GD, GD-m.}
+        \label{fig:ada1456u}
+\end{figure}
+\end{appendices}\label{appendices}
+
+
+
+\newline
+\clearpage
+
 \bibliography{sources.bib}
 \bibliographystyle{apalike} %abbrv
 \end{document}
