@@ -4,4 +4,4 @@ Inspired by the work of Stone, 1978 ([https://www.sciencedirect.com/science/arti
 
 # CompSci Project 2: Neural Networks
 
-# CompSci Project 1: Bayesian Methods
+# CompSci Project 3: Bayesian Methods
