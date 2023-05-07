@@ -1317,7 +1317,7 @@ Because inverting the Hessian matrix proved to be a computationally light calcul
 
 $y= \boldsymbol{2.28959173\cdot 10^{-5}}+ \boldsymbol{1.59190196\cdot 10^{-1}}\cdot x+\boldsymbol{ 1.00758533\cdot 10^{-1}}\cdot x^2 \boldsymbol{-2.21102042\cdot 10^{-1}}\cdot x^3+ $
 
-\begin{equation}
+\begin{equation}\label{23456789}
 \hspace{-4cm}+\boldsymbol{4.46013345\cdot 10^{-2}}\cdot x^4+ \boldsymbol{7.13140276\cdot 10^{-2}}\cdot x^5 \boldsymbol{-2.47365356\cdot 10^{-2}}\cdot x^6,
 \end{equation}
 
@@ -1327,12 +1327,13 @@ The next best option would be, again, the simplest one, that is \textbf{GD for O
 
 $y= \boldsymbol{-0.00046354}+ \boldsymbol{ 0.16718365}\cdot x\boldsymbol{ -0.02067232}}\cdot x^2 \boldsymbol{-0.1772271 }\cdot x^3+$
 
-\begin{equation}
+\begin{equation}\label{6543}
 \hspace{-6.5cm}+\boldsymbol{0.02146752}\cdot x^4+ \boldsymbol{0.07208737}\cdot x^5 \boldsymbol{-0.02290923}\cdot x^6,
 \end{equation}
 
 with y being again the heat flux, \textit{f} and $x=sin(\phi)$ the latitude. 
 
+Note that the polynomial coefficients are very different from each other in eqns.\boldsymbol{\ref{23456789}} and \boldsymbol{\ref{6543}}. Plus, they change after each run, due to the random noise added to the model. The ones presented here approach the dataset very well (with a very small MSE) and were, hence, selected for the polynomial fit of the meridional heat flux function, \textit{f}.
 
 \section{Future work}\label{future}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
