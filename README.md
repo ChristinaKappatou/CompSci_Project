@@ -13,7 +13,8 @@ All of the calculations for this project can be found in the folder "Project1". 
 
 My final report (Christina_Kappatou_Project_1_CompSci.pdf) also lies there.
 
-# CompSci Project 2&3: Modelling the meridional heat transport at the Top of the Atmosphere, using a Feed Forward Neural Network and Gaussian Process Regression.
+# CompSci Project 2&3: In Neural Networks and Gaussian Processes
+# Modelling the meridional heat transport at the Top of the Atmosphere, using a Feed Forward Neural Network and Gaussian Process Regression.
 
 
 
