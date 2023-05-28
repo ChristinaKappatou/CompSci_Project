@@ -1,0 +1,159 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage[colorlinks, citecolor=black, urlcolor=Black]{hyperref}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{epstopdf, epsfig}
+\usepackage{xcolor}
+\geometry{margin=2.5cm, top= 2cm, bottom= 2cm}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage[font={footnotesize,bf}]{caption}
+\usepackage[toc,page]{appendix}
+\usepackage{unicode-math}
+\usepackage{derivative}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\hypersetup{colorlinks,linkcolor={black},citecolor={black},urlcolor={Blue}} 
+\usepackage{mathtools}
+\renewcommand{\theequation}{(\arabic{equation})}
+\newtagform{bold}[\textbf]{}{}
+\usetagform{bold}
+
+\title{\textbf{Modelling the meridional heat transport at the Top of the Atmosphere, using a Feed Forward Neural Network and Gaussian Process Regression.}}
+\author{Christina Kappatou,\\ Department of Geosciences, UiO,\\ christina.kappatou@geo.uio.no}
+\date{May 2023}
+
+\begin{document}
+
+\maketitle
+
+\section*{Abstract}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In a non-analytical effort to assess the meridional heat transport at the Top of the Atmosphere (TOA), I estimated the training error using a sinusoidal fit, with a Feed Forward Neural Network (FFNN). For the NN,  5 different activation functions were combined with 6 different ways to tune the learning rate for the stochastic gradient descent. With the results leading to fairly large training errors, even for the optimum combination of a sigmoid activation function with a constant learning rate, I moved to approaching the heat flux curve differently, this time employing Gaussian Process regression with 3 different percentages of train/test data. As expected, decreasing the amount of train data points leads to high train errors and large confidence intervals, rendering the approaching of the curve less reliable.
+
+\section{Introduction}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In his paper \cite{Stone_1978} uses a very simple equilibrium to calculate the meridional heat transport at the TOA. Using the following equation:
+
+\begin{equation}\label{1}
+    \frac{dF}{d\phi} = 2\pi\cdot{R^2}\cdot{cos\phi}\cdot{[Q\cdot{(1-\alpha)}-I]}, 
+\end{equation}
+
+he states that, when the planet is in equilibrium, the total energy flux across a latitude belt is given by the difference of the incoming solar radiation (\textit{Q}) and the outgoing reflected solar radiation ($\alpha\cdot Q$) from the clouds and snow/ ice (expressed by the albedo, $\alpha$) and the outgoing thermal radiation (\textit{I}), caused by emissions. 
+
+However, because in eqn.\ref{1}, all \textit{Q}, $\alpha$ and \textit{I} are latitude dependent, it is impossible to find an analytical expression for the heat flux just by integrating. Yet, having all of the three values in a longitude-latitude grid, one can try approaching the total heat flux numerically. In this paper, I tried using both a Feed Forward Neural Network (FFNN) algorithm to estimate the training error between the predicted and the actual data values and a simple Gaussian Process Regression to approach the heat transport curve. 
+
+\section{Data treatment}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+To calculate the total heat transport, I used the dataset from \href{https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-earth-radiation-budget?tab=overview}{NASA CERES EBAF} for the years 2000-2022. Integrating over longitude and over time, gives Figs.\ref{fig:components}. The total heat transport (Fig.\ref{fig:total}) comes from subtracting the values of the outgoing shortwave (Fig.\ref{fig:sw_out}) and longwave (Fig.\ref{fig:lw_out}) radiation from the incoming shortwave radiation (Fig.\ref{fig:sw_in}). 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{sw_in.png}
+         \caption{Time-, zonally- averaged incoming shortwave radiation from the years 2000-2022. Data taken from \href{https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-earth-radiation-budget?tab=overview}{NASA CERES EBAF}.}
+         \label{fig:sw_in}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{lw_out.png}
+         \caption{Time-, zonally- averaged outgoing longwave radiation from the years 2000-2022. Data taken from \href{https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-earth-radiation-budget?tab=overview}{NASA CERES EBAF}.}
+         \label{fig:lw_out}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{sw_out.png}
+         \caption{Time-, zonally- averaged outgoing shortwave radiation from the years 2000-2022. Data taken from \href{https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-earth-radiation-budget?tab=overview}{NASA CERES EBAF}.}
+         \label{fig:sw_out}
+     \end{subfigure}
+        \caption{Heat transport components at the TOA (Top of the Atmosphere).}
+        \label{fig:components}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.6\textwidth]{total.png}
+        \textbf{\caption{\centering{The total heat transport, expressed as the difference of the outgoing shortwave and longwave radiation from the incoming shortwave radiation at the TOA.}\label{fig:total}}}    
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The Neural Network}
+
+Following the basic architecture of a Feed Forward Neural Network (FFNN) for regression, as described by \cite{Mehta_2019}, pg. 46-47, I run the code of M.Hjorth-Jensen, with minor adjustments. The entire code, along with the dataset treatment can be found at my \href{https://github.com/ChristinaKappatou/CompSci_Project/tree/main/Project2}{GitHub page}. 
+
+For the Feed Forward stage, I combined 5 of the most common activation functions (identity, sigmoid, softmax, RELU and LRELU) with 6 different ways (constant $\gamma$, momentum Stochastic Gradient Descent (SGD), AdaGrad, Adagrad with momentum, RMS-propagation and ADAM, as explained in my previous Project 1) to tune the learning rate in the Gradient Descent stage.
+
+For the SGD, I used 1 minibatch, downgrading it into the plain Gradient descent case with 1000 epochs. The design matrix included sin(x), instead of plain x, with x being the latitude values, in order to approach the heat flux as a polynomial of up to 3rd degree of latitude sinuses.
+
+The train error depicted in Fig.\ref{fig:error} is calculated, using the MSE as described in my previous project 1, as a cost function. Although its values are small, they are not \textit{relatively} small; one shouldn't forget that the total heat transport is calculated in PW and, from Fig.\ref{fig:total} one can see that its values don't get higher than 1 PW. Therefore an error of the order of 0.2 PW is important. 
+
+From Fig. \ref{fig:error}, one can see that the best scheduler-activation function combination is using a sigmoid function with a constant learning rate, $\gamma$ for the GD. However, given that the train error value is still quite high (0.166 PW), the Neural Network will have to be better tuned to the dataset or another method to be tried altogether. 
+
+In the next section, I am investigating approaching the curve of the total heat flux using Gaussian Process regression. 
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[width=0.6\textwidth]{Text-#25-+-raster.jpg}
+        \textbf{\caption{\centering{The training error for each combination of activation function and learning rate tuning method (scheduler).}\label{fig:error}}}    
+\end{figure}
+
+\section{The Gaussian Process Regression}
+
+Following the code, written by \href{https://scikit-learn.org/stable/auto_examples/gaussian_process/plot_gpr_noisy_targets.html#dataset-generation}{Dubourg, Vanderplas, Metzen and Lemaitre}, I used GaussianProcessRegression from Scikit-learn, using a a radial basis function (RBF) kernel. Three different percentages of train/test datasets were applied and their effect on the final fitting was investigated. 
+
+As can be seen from Figs. \ref{fig:percent}, having less training data, gradually increases both the deviation of the mean prediction from the actual curve and the 95\% confidence interval. 
+
+\begin{figure}[h!]
+     \centering
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{0.25.png}
+         \caption{The mean prediction and confidence interval for the test data being the 25\% of the whole dataset.}
+         \label{fig:0.25}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{0.5.png}
+         \caption{The mean prediction and confidence interval for the test data being the 50\% of the whole dataset.}
+         \label{fig:0.5}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[h!]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{0.75.png}
+         \caption{The mean prediction and confidence interval for the test data being the 75\% of the whole dataset.}
+         \label{fig:0.75}
+     \end{subfigure}
+
+        \caption{The mean prediction and confidence interval varying with the size of the test/train data.}
+        \label{fig:percent}
+\end{figure}
+
+\section{Conclusions and Discussion}
+
+A Feed Forward Neural Network regression was applied to a dataset of the total heat transport at the Top of the Atmosphere, in order to settle on a sinusoidal expression. Although I coupled 5 different activation functions with 6 different ways of tuning the learning parameter, $\gamma$ in the gradient descent part, the train error was significant, even for the best combination, that is using a sigmoid activation function, along with a constant learning rate. For this reason, I moved to simply approaching the curve of the heat flux itself, without aiming for an analytical expression. For this, I used Gaussian Process regression, varying the train data size. The size of the train data was chosen to be equal to 75\% of the entire dataset, since this was the value with the least visible train error and the narrowest confidence bands. 
+
+\section{Future work}
+
+Although the tight time frame of the present project did not allow for any original scripting, I am still very interested in writing my own code for a FFNN regression. The dataset itself has also to be further evaluated by my supervisor, Joe Lacasce, and me. The plots do not look like Stone's sinusoidal results and it is still unclear if I treated the data the same as he did with the ones from \cite{Oort_Haar_1976}. In any case, I would like to work on a longer time-series, since 22 years (from 2000 to 2022) are probably not enough to assess a general trend of the heat transports. 
+
+Overall, the need for better understanding of the NN principles is more that clear to me now. I can see it's possible to integrate them into my research more constructively and I will try investigate that route during the next months.
+
+\newline
+\clearpage
+
+\bibliography{sources.bib}
+\bibliographystyle{apalike} %abbrv
+\end{document}
+
